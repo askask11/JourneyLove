@@ -31,14 +31,14 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 /**
- *This bulids a JFrame that enables user to edit a component.
+ * This bulids a JFrame that enables user to edit a component.
  * @author Johnson Gao
  */
 public class ComponentEditor extends JFrame
 {
 
     public static final long serialVersionUID = 1L;
-final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
+    final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
     private JPanel westPanel, northPanel;
     private JLabel fontLabel,colorLabel,titleLabel,fontSizeLabel,foreGround;
     private JComboBox<String> fontComboBox;
@@ -48,7 +48,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
     /**
      * Main constructor of the editor.
      * @param component The component to be edited.
-     */
+     */ 
     public ComponentEditor(Component component)
     {
         super(component.getName() + " Setting");

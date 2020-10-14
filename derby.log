@@ -1,13 +1,13 @@
 ----------------------------------------------------------------
-Fri Mar 27 22:56:19 CDT 2020:
-正在使用类加载程序 sun.misc.Launcher$AppClassLoader@266474c2 引导数据库
-目录 C:\Users\app\Documents\NetBeansProjects\JourneyLove\SecretGarden 中的 Derby 版本 The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546) 实例 a816c00e-0171-1f48-85ed-000006ff0920
-已从 file:/C:/Program%20Files/Java/jdk1.8.0_191/db/lib/derby.jar 加载
+Tue Sep 29 15:26:40 CST 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0174-d8c1-9784-00000f3816e0 
+on database directory /Users/jianqing/NetBeansProjects/JourneyLove/SecretGarden with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@277050dc 
+Loaded from file:/Users/jianqing/GlassFish_Server/javadb/lib/derby.jar
 java.vendor=Oracle Corporation
-java.runtime.version=1.8.0_191-b12
-user.dir=C:\Users\app\Documents\NetBeansProjects\JourneyLove
-os.name=Windows 10
-os.arch=amd64
-os.version=10.0
+java.runtime.version=11.0.6+8-LTS
+user.dir=/Users/jianqing/NetBeansProjects/JourneyLove
+os.name=Mac OS X
+os.arch=x86_64
+os.version=10.15.6
 derby.system.home=null
-数据库类加载程序已启动 - derby.database.classpath=''
+Database Class Loader started - derby.database.classpath=''

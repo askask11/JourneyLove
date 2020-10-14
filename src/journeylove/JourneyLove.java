@@ -392,7 +392,7 @@ private UIManager.LookAndFeelInfo[] infos;
         this.add(westPanel, BorderLayout.WEST);
 
         /**
-         * Set this frame truly visiable. Add-on methods @tail.
+         * Set this frame truly visible. Add-on methods @tail. love ya!
          */
         this.setVisible(true);
         this.validate();
@@ -403,7 +403,8 @@ private UIManager.LookAndFeelInfo[] infos;
             @Override
             public void windowClosing(WindowEvent e)
             {
-                int confirmed = JOptionPane.showConfirmDialog(null, "别走嘛亲爱滴再多陪陪我 ~ ", "狠心离开确认", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, openIcon("Noo_WPS.jpg", 173, 153));
+                int confirmed = JOptionPane.showConfirmDialog(null, "别走嘛亲爱滴再多陪陪我 ~"
+                        + "\n Are you sure to leave darling? Please just stay with me :) Don't leave me alone", "狠心离开确认", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, openIcon("Noo_WPS.jpg", 173, 153));
                 if (confirmed == JOptionPane.YES_OPTION)
                 {
                     clickSound(SoundOracle.DOOR_UNLOCKED_SOUND);
@@ -827,7 +828,7 @@ private UIManager.LookAndFeelInfo[] infos;
                         //NO
             default:
                 Warning oobWarning = new Warning("Out of bounce: Unexpected input @ nomissb");
-                throw new UnsupportedOperationException("Out of bounce: Unexpected input");
+                //throw new UnsupportedOperationException("Out of bounce: Unexpected input");
         }
 
     }

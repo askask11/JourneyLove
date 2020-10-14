@@ -1202,6 +1202,7 @@ public class SecretGardenConnection
 
                     //[Main Imagelist, Test_List, Test_listsssssssss,  ,  do ers`~]
                     case 19:
+                        secretGardenConnection.doStatement("SHOW TABLES");
 //                            secretGardenConnection.recordDropImageList("doers`~");
 //                            secretGardenConnection.recordDropImageList("do ers`~");
 //                            secretGardenConnection.doStatement("DELETE FROM ImageSubLists WHERE NAME= 'doers`~'");
