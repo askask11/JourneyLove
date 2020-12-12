@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.InputMismatchException;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,9 +73,10 @@ public class SecretGardenConnection
 //Collctors already created, code not yet updated
 
     final String PREF_KEY_SAVINGPATH = "Default Saving Path";
-    
+
     final String PERF_KEY_MAILBOX = "MailBoxAddress";
     final String PERF_KEY_MUSIC_PLAYMODE = "MusicPlayMode";
+
     /**
      * This returns an arraylist contains the data from the table.
      *
@@ -147,6 +149,13 @@ public class SecretGardenConnection
         return getDisplayImage(ALL_IMAGES_TABLE_NAME);
     }
 
+    public void checkConnection()throws SQLException
+    {
+        if(this.dbConn.isClosed())
+        {
+            setDbConn();
+        }
+    }
     /*
      *****> For class: DisplayImage Table name: ImagePlayList Values name(varchar 50), UrlAddress(varchar 300), type(int),ID (int) ,Description (varchar(500))<*****
     Also table name: Name: ImageSubLists  Column： Name varchar(50) contains all subtables of imagelist.
@@ -161,6 +170,8 @@ public class SecretGardenConnection
      */
     public ArrayList<DisplayImage> getDisplayImage(String listName) throws SQLException
     {
+        checkConnection();
+        
         ArrayList<DisplayImage> data = new ArrayList<>();
         //String tableName = "ImagePlayList";
         //String[] tableHeader = {"Name", "UrlAddress", "Type"};
@@ -207,6 +218,7 @@ public class SecretGardenConnection
      */
     public void insertImageIntoList(DisplayImage dm, String listName) throws SQLException
     {
+        checkConnection();
         String name = dm.getName();
         String url = dm.getUrlAsString();
         int type = dm.getType();
@@ -226,6 +238,7 @@ public class SecretGardenConnection
 
     public void insertImagesInBatch(DisplayImage[] images, String targetListName) throws SQLException
     {
+        checkConnection();
         String dbQuary = "INSERT INTO " + targetListName + " VALUES (?,?,?,?,?)";
         PreparedStatement ps = dbConn.prepareStatement(dbQuary);
         for (DisplayImage image : images)
@@ -263,6 +276,7 @@ public class SecretGardenConnection
      */
     public void removeFromImageDisplayList(int id, String listName) throws SQLException
     {
+        checkConnection();
         String dbQuary = "DELETE FROM " + listName + " WHERE ID=?";
         PreparedStatement ps = dbConn.prepareStatement(dbQuary);
         ps.setInt(1, id);
@@ -295,6 +309,7 @@ public class SecretGardenConnection
      */
     public void updateImageDisplayList(int oldId, DisplayImage alternativeImage, String listName) throws SQLException
     {
+        checkConnection();
         String sql = "UPDATE " + listName + " SET Name=?, UrlAddress=? ,Type=?, Description=? WHERE ID = ?";
         PreparedStatement ps = dbConn.prepareStatement(sql);
         ps.setString(1, alternativeImage.getName());
@@ -328,6 +343,7 @@ public class SecretGardenConnection
      */
     public void swapImageDisplayList(int id1, int id2, String listName) throws SQLException
     {
+        checkConnection();
         String dbQuary = "SELECT * FROM " + listName + " WHERE ID=?";
         DisplayImage img1 = new DisplayImage();
         DisplayImage img2 = new DisplayImage();
@@ -373,6 +389,7 @@ public class SecretGardenConnection
      */
     public void exportImageList(File out, String listName) throws IOException, SQLException
     {
+        checkConnection();
         if (!out.exists())
         {
             out.mkdirs();
@@ -412,6 +429,7 @@ public class SecretGardenConnection
      */
     public void importIntoImageList(File in, String tableName) throws FileNotFoundException, IOException, SQLException
     {
+        checkConnection();
         try (FileReader reader = new FileReader(in))
         {
             BufferedReader br;
@@ -450,6 +468,7 @@ public class SecretGardenConnection
 
     public void testImportIntoImageList(File in, String name) throws IOException
     {
+        
         java.util.List<String> list = Files.readAllLines(in.toPath());
         for (String img : list)
         {
@@ -469,6 +488,7 @@ public class SecretGardenConnection
      */
     public String[] getImageSublists() throws SQLException
     {
+        checkConnection();
         String dbQuary = "SELECT * FROM ImageSubLists";
         Statement s = dbConn.createStatement();
         ResultSet rs = s.executeQuery(dbQuary);
@@ -493,6 +513,7 @@ public class SecretGardenConnection
      */
     public void recordImageSublist(String listName) throws SQLException
     {
+        checkConnection();
         String dbQuary = "INSERT INTO ImageSubLists VALUES (?)";
         String name = IMAGES_SUBLIST_PREFIX + listName;
         PreparedStatement ps = dbConn.prepareStatement(dbQuary);
@@ -511,6 +532,7 @@ public class SecretGardenConnection
      */
     public int recordDropImageList(String listName) throws SQLException
     {
+        checkConnection();
         String dbQuary = "DELETE FROM ImageSubLists WHERE Name=?";
         int status;
         String name = IMAGES_SUBLIST_PREFIX + listName;
@@ -531,6 +553,7 @@ public class SecretGardenConnection
     {
         //String sql = "CREATE TABLE " + IMAGES_SUBLIST_PREFIX+listName;
         //Statement s = dbConn.createStatement();
+        checkConnection();
         createTable(IMAGES_SUBLIST_PREFIX + listName, IMAGETABLES_COLUMNS, "A subulist of imagelist.");
         recordImageSublist(listName);//Sublist is under main lists supervision.
 
@@ -544,6 +567,7 @@ public class SecretGardenConnection
      */
     public void dropImageSublist(String listName) throws SQLException
     {
+        checkConnection();
         dropTable(IMAGES_SUBLIST_PREFIX + listName);
         recordDropImageList(listName);
         System.out.println("A image sublist has beed dropped.");
@@ -593,6 +617,7 @@ public class SecretGardenConnection
      */
     public void renameImageSublist(String oldName, String newName) throws SQLException
     {
+        checkConnection();
         if (oldName.startsWith(IMAGES_SUBLIST_PREFIX) && newName.startsWith(IMAGES_SUBLIST_PREFIX))
         {
             String sql = "ALTER TABLE " + oldName + "RENAME TO " + newName;
@@ -626,6 +651,7 @@ public class SecretGardenConnection
      */
     public ArrayList<MyMusic> getMyMusics() throws SQLException
     {
+        checkConnection();
         ArrayList<MyMusic> musics = new ArrayList<>();
         String dbQuary = "SELECT * FROM MusicList";
         System.out.println("MusicList: ");
@@ -649,6 +675,7 @@ public class SecretGardenConnection
      */
     public void removeFromMusicList(int id) throws SQLException
     {
+        checkConnection();
         String sql = "DELETE FROM MusicList WHERE ID=?";
         PreparedStatement ps = dbConn.prepareStatement(sql);
         ps.setInt(1, id);
@@ -671,6 +698,7 @@ public class SecretGardenConnection
      */
     public int addIntoMusicList(MyMusic myMusic) throws SQLException, UnsupportedAudioFileException, JavaLayerException, LineUnavailableException, IOException
     {
+        checkConnection();
         String sql = "INSERT INTO MusicList VALUES (?,?,?,?,?,?)";
         int executed;
         //sql= "INSERT INTO MusicList VALUES Name=?, Url=?, Type=?,ID=?,Time=?,LyricAddress=?";
@@ -693,6 +721,7 @@ public class SecretGardenConnection
 
     public int[] addIntoMusicListInBatch(MyMusic[] musicList) throws SQLException, UnsupportedAudioFileException, JavaLayerException, LineUnavailableException, IOException
     {
+        checkConnection();
         String sql = "INSERT INTO MusicList VALUES (?,?,?,?,?,?)";
         //sql= "INSERT INTO MusicList VALUES Name=?, Url=?, Type=?,ID=?,Time=?,LyricAddress=?";
         int[] executeBatch;
@@ -727,6 +756,7 @@ public class SecretGardenConnection
      */
     public void updateMusicList(int id, MyMusic newMusic) throws SQLException, UnsupportedAudioFileException, JavaLayerException, LineUnavailableException, IOException
     {
+        checkConnection();
         String sql = "UPDATE MusicList SET Name=?, URL=?, Type=?, Time=?, LyricAddress=? WHERE ID=?";
         PreparedStatement ps = dbConn.prepareStatement(sql);
         ps.setString(1, newMusic.getName());
@@ -754,6 +784,7 @@ public class SecretGardenConnection
      */
     public void swapMusicList(int id1, int id2) throws SQLException, UnsupportedAudioFileException, JavaLayerException, LineUnavailableException, IOException
     {
+        checkConnection();
         MyMusic music1 = new MyMusic();
         MyMusic music2 = new MyMusic();
         String dbQuary = "SELECT * FROM MusicList Where ID=?";
@@ -808,6 +839,7 @@ public class SecretGardenConnection
         //create a new file, if the directory does not exist, create one.
         //String outpath = out.getAbsolutePath()+"\\Export";
         //File pathFile = new File(outpath);
+        checkConnection();
         if (!out.exists())
         {
             out.mkdirs();
@@ -850,6 +882,7 @@ public class SecretGardenConnection
     public void importIntoMusicList(File in) throws FileNotFoundException, IOException, SQLException, UnsupportedAudioFileException, JavaLayerException, LineUnavailableException
     {
         //Create a file reader with java try-with-resources.
+        checkConnection();
         try (FileReader reader = new FileReader(in))
         {
 
@@ -881,16 +914,12 @@ public class SecretGardenConnection
         }
     }
 
-    
-    
     /**
      * ****************************************
      * Name: Preferences Column： Name varchar(30), Information varchar(300)
-     * description: This is the perferences of the user. 
-     * Now have 1.Name:
-     * 1. Default Saving Path
-     * 2. MailBoxAddress , 
-     * 3.MusicPlayMode (default = Sequence)
+     * description: This is the perferences of the user. Now have 1.Name: 1.
+     * Default Saving Path 2. MailBoxAddress , 3.MusicPlayMode (default =
+     * Sequence)
      */
     /**
      * Insert a new setting into the setting field.
@@ -901,6 +930,7 @@ public class SecretGardenConnection
      */
     public void insertIntoPreferencesList(String name, String defaultVar) throws SQLException
     {
+        checkConnection();
         System.out.println("journeylove.SecretGardenConnection.insertIntoPreferencesList()");
         String sql = "INSERT INTO Preferences VALUES (?,?)";
         PreparedStatement ps = dbConn.prepareStatement(sql);
@@ -909,9 +939,10 @@ public class SecretGardenConnection
         ps.executeUpdate();
         System.out.println("Name " + name + "default " + defaultVar + " are inserted successfully.");
     }
-    
+
     public String getInfoFromPerferList(String key) throws SQLException
     {
+        checkConnection();
         String dbQuary = "SELECT * FROM Preferences Where Name = ?";
         String info;
         try (PreparedStatement ps = dbConn.prepareStatement(dbQuary))
@@ -919,26 +950,31 @@ public class SecretGardenConnection
             ResultSet rs = null;
             ps.setString(1, key);
             rs = ps.executeQuery();
-            rs.next();
-            info = rs.getString(2);
+            if (rs.next())
+            {
+                info = rs.getString(2);
+            } else
+            {
+                info = null;
+            }
             System.out.println("journeylove.SecretGardenConnection.getInfoFromPerferList() : " + key);
             rs.close();
         }
         return info;
     }
-    
+
     public void updatePreferenceList(String key, String newVar) throws SQLException
     {
+        checkConnection();
         String sql = "UPDATE Preferences SET Information=? WHERE Name=?";
         try (PreparedStatement ps = dbConn.prepareStatement(sql))
         {
             ps.setString(1, newVar);
             ps.setString(2, key);
             ps.executeUpdate();
-            System.out.println("journeylove.SecretGardenConnection.updatePreferenceList() key = " +key + " newVar = " + newVar);
+            System.out.println("journeylove.SecretGardenConnection.updatePreferenceList() key = " + key + " newVar = " + newVar);
         }
     }
-    
 
     /**
      * Get user-defined saving path in system.
@@ -948,12 +984,20 @@ public class SecretGardenConnection
      */
     public String getDefaultSavingPath() throws SQLException
     {
+        checkConnection();
         String path;
         String dbQuary = "SELECT * FROM Preferences Where Name = 'Default Saving Path'";
         Statement s = dbConn.createStatement();
         ResultSet rs = s.executeQuery(dbQuary);
-        rs.next();
-        path = rs.getString(2);
+        
+        if(rs.next())
+        {
+            path = rs.getString(2);
+        }else
+        {
+            path = null;
+        }
+        
         return path;
     }
 
@@ -965,6 +1009,7 @@ public class SecretGardenConnection
      */
     public void updateDefaultSavingPath(String path) throws SQLException
     {
+        checkConnection();
         String sql = "UPDATE Preferences SET Information=? WHERE Name=?";
         PreparedStatement ps = dbConn.prepareStatement(sql);
         ps.setString(1, path);
@@ -972,17 +1017,19 @@ public class SecretGardenConnection
         ps.executeUpdate();
         System.out.println("---Preferences updated---");
     }
-    
+
     public String getMailBoxAddress() throws SQLException
     {
+        checkConnection();
         Statement s = dbConn.createStatement();
         ResultSet rs = s.executeQuery("SELECT Information FROM Preferences WHERE Name='MailBoxAddress'");
         rs.next();
         return rs.getString("Information");
     }
-    
+
     public void updateMailBoxAddress(String path) throws SQLException
     {
+        checkConnection();
         String sql = "UPDATE Preferences SET Information=? WHERE Name=?";
         PreparedStatement ps = dbConn.prepareStatement(sql);
         ps.setString(1, path);
@@ -990,19 +1037,18 @@ public class SecretGardenConnection
         ps.executeUpdate();
         System.out.println("---Preferences updated---");
     }
-    
+
     public String getMusicPlayMode() throws SQLException
     {
         return getInfoFromPerferList(PERF_KEY_MUSIC_PLAYMODE);
     }
-    
+
     public void setMusicPlayMode(String mode) throws SQLException
     {
         updatePreferenceList(PREF_KEY_SAVINGPATH, mode);
         System.out.println("---Preferences updated---");
     }
-    
-    
+
     /**
      * Close the database connection with the exception handling.
      */
@@ -1262,9 +1308,10 @@ public class SecretGardenConnection
 
     /**
      * Log the detail of an exception to a log file.
+     *
      * @param ex The exception to log.
-     * @return Either <code>true</code>for logs stored in the default saving path or<code>false</code>for 
-     * no default saving path or meet an exception.
+     * @return Either <code>true</code>for logs stored in the default saving
+     * path or<code>false</code>for no default saving path or meet an exception.
      */
     public boolean createErrorLog(Throwable ex)
     {
@@ -1273,7 +1320,7 @@ public class SecretGardenConnection
         {
             String defDir = getDefaultSavingPath();
             File dir;
-            
+
             if (defDir == null)
             {
                 dir = new File("C:\\Programlog\\Journey's secret garden");
@@ -1299,8 +1346,8 @@ public class SecretGardenConnection
             }
         } catch (SQLException | IOException ex1)
         {
-            successIn = false;       
-           // Logger.getLogger(SecretGardenConnection.class.getName()).log(Level.SEVERE, null, ex1);
+            successIn = false;
+            // Logger.getLogger(SecretGardenConnection.class.getName()).log(Level.SEVERE, null, ex1);
         }
         return successIn;
     }
@@ -1316,6 +1363,7 @@ public class SecretGardenConnection
      */
     private void createTable(String tableName, String headers, String dbName, String description) throws SQLException
     {
+        checkConnection();
         System.out.println(tableName);
         String dbQuary = "CREATE TABLE " + tableName + " (" + headers + ")";
         setDbName(dbName);
@@ -1358,7 +1406,7 @@ public class SecretGardenConnection
 
     /**
      * Drop the table within the database.
-     *
+     *@deprecated This table is no longer used.
      * @param tableName
      */
     public void dropTable(String tableName)
@@ -1396,6 +1444,7 @@ public class SecretGardenConnection
      *
      * @param data The list of tabls in this database.
      * @return The objcase of data.
+     * @deprecated This table is no longer used.
      */
     public Object[][] getTablesInfo(ArrayList<ArrayList<String>> data)
     {
@@ -1424,7 +1473,9 @@ public class SecretGardenConnection
      * @param name
      * @param statement
      * @param description
+     * @deprecated This table is no longer used.
      * @throws SQLException
+     * 
      */
     public void insertIntoTables(String name, String statement, String description) throws SQLException
     {
@@ -1442,7 +1493,7 @@ public class SecretGardenConnection
 
     /**
      * Record when the a table has been dropped, remove it from the list.
-     *
+     *@deprecated 
      * @param tableName The name of the table being dropped.
      */
     private void recordDropTable(String tableName) throws SQLException
@@ -1467,7 +1518,7 @@ public class SecretGardenConnection
     {
 
         //NO this.dbConn = dbConn;
-        String connectionURL = "jdbc:derby:" + this.dbName;
+        String connectionURL = "jdbc:mysql://db.jianqinggao.com:3306/" + this.dbName;
         this.dbConn = null;
         //Find the driver and make connection;
 
@@ -1476,8 +1527,16 @@ public class SecretGardenConnection
             System.out.println("The URL LOADED: " + connectionURL);
             System.out.println("ATTENTION: This application has already connected to database: " + dbName
                     + "\n please do not double connect otherwise it will fail");
-            Class.forName("org.apache.derby.jdbc.EmbeddedDriver");//!!!!!!!!!!!!!Typo?
-            this.dbConn = DriverManager.getConnection(connectionURL);
+//            Class.forName("org.apache.derby.jdbc.EmbeddedDriver");//!!!!!!!!!!!!!Typo?
+//            
+//            this.dbConn = DriverManager.getConnection(connectionURL);
+            Class.forName("com.mysql.cj.jdbc.Driver"); //URL for new version jdbc connector.
+            Properties properties = new Properties(); //connection system property
+            properties.setProperty("user", "Jenny");
+            properties.setProperty("password", "3266933");
+            properties.setProperty("useSSL", "true");//set this true if domain suppotes SSL
+            //"-u root -p mysql1 -useSSL false"
+            this.dbConn = DriverManager.getConnection(connectionURL, properties);
             System.out.println("Database connection to : " + dbName + " are established successfully. ");
         } catch (ClassNotFoundException cnfe)
         {
@@ -1489,20 +1548,20 @@ public class SecretGardenConnection
         {
 //            System.out.println("SQL CONNECTION ERROR");
 //            sqle.printStackTrace(System.err);
-            Warning warning = new Warning("Failed to connect to database.","Please close another running application and make sure this jar comes with \"SecretGarden\"and that directory is never touched.",sqle,false,
-            ()->{int conf = JOptionPane.showConfirmDialog(null, "Do you want to close this application", "ERROR-CLOSE", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            if(conf == JOptionPane.OK_OPTION)
+            Warning warning = new Warning("Failed to connect to database.", "Please close another running application and make sure this jar comes with \"SecretGarden\"and that directory is never touched.", sqle, false,
+                    () ->
             {
-                System.exit(1);
-                
-            }
-            
+                int conf = JOptionPane.showConfirmDialog(null, "Do you want to close this application", "ERROR-CLOSE", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (conf == JOptionPane.OK_OPTION)
+                {
+                    System.exit(1);
+
+                }
+
             });
-            
+
         }
     }
-    
-    
 
     public void setDbName(String newDBname)
     {

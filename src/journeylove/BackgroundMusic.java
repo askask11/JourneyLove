@@ -848,14 +848,20 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         //Check default saving address status.
         try
         {
-            if (database.getDefaultSavingPath().isEmpty())
+            String defaultSaving = database.getDefaultSavingPath();
+            if (defaultSaving == null || defaultSaving.isEmpty())
             {
-                Warning warning = new Warning("You don't have a default saving address yet!", "Please set a default saving address");
-                warning.setSolution(() ->
+//                Warning warning = new Warning("You don't have a default saving address yet!", "Please set a default saving address");
+//                warning.setSolution(() ->
+//                {
+//                    JOptionPane.showMessageDialog(this, "Please set your default saving address in the file chooder poped up.");
+//                });
+//                setDefaultSavingAddress();
+                int conf =JOptionPane.showConfirmDialog(this, "You don't have a default saving address yet. Do you want to set a default saving address?", "No Saving Address", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                if(conf==JOptionPane.YES_OPTION)
                 {
-                    JOptionPane.showMessageDialog(this, "Please set your default saving address in the file chooder poped up.");
-                });
-                setDefaultSavingAddress();
+                    setDefaultSavingAddress();
+                }
             }
         } catch (SQLException ex)
         {
@@ -895,9 +901,16 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                 stop();
                 clickSound(SoundOracle.DOOR_UNLOCKED_SOUND);
                 lyricWindow.dispose();
-                hotkeys.unregisterHotKey(KEY_F7);
-                hotkeys.unregisterHotKey(KEY_F8);
-                hotkeys.unregisterHotKey(KEY_F9);
+
+                try
+                {
+                    hotkeys.unregisterHotKey(KEY_F7);
+                    hotkeys.unregisterHotKey(KEY_F8);
+                    hotkeys.unregisterHotKey(KEY_F9);
+                } catch (Exception hke1)
+                {
+                    System.out.println("Failed to unregister hot key!");
+                }
             }
 
             @Override
@@ -917,11 +930,17 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         lyricWindow = new LyricWindow(this);//show the lyric window last.
 
         //REGISTER HOT KEY!
-        hotkeys = JIntellitype.getInstance();
-        hotkeys.registerHotKey(KEY_F7, "F7");
-        hotkeys.registerHotKey(KEY_F8, "F8");
-        hotkeys.registerHotKey(KEY_F9, "F9");
-        hotkeys.addHotKeyListener(this);
+        try
+        {
+            hotkeys = JIntellitype.getInstance();
+            hotkeys.registerHotKey(KEY_F7, "F7");
+            hotkeys.registerHotKey(KEY_F8, "F8");
+            hotkeys.registerHotKey(KEY_F9, "F9");
+            hotkeys.addHotKeyListener(this);
+        } catch (Exception e)
+        {
+            System.out.println("Failed to register hot key.");
+        }
 
     }
 
@@ -1269,7 +1288,8 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
             clickSound(SoundOracle.TINY_BUTTON_SOUND);
             try
             {
-                if (database.getDefaultSavingPath().isEmpty())
+                String dfp = database.getDefaultSavingPath();
+                if (dfp==null||dfp.isEmpty())
                 {
                     messageLabel.setText("You don't have your default address!! Please  set it up.");
                     setDefaultSavingAddress();
@@ -1679,7 +1699,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         ///see if the msuci is legal and read the time of the music.
         if (music.isLegal())
         {
-            if (!path.isEmpty())
+            if (path!=null&&!path.isEmpty())
             {//create a music format converter.
                 MusicConverter converter = new MusicConverter();
                 convertedFile = converter.convertAndSave(new java.net.URL(url), name, new File(database.getDefaultSavingPath()));
@@ -1738,7 +1758,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         MyMusic music = new MyMusic(name, url, MyMusic.TYPE_ONLINE);
         if (music.isLegal())//see if it is a real readable music format, and calculate time length.
         {
-            if (!path.isEmpty())
+            if (path!=null&&!path.isEmpty())
             {
                 MusicConverter converter = new MusicConverter();
                 convertedFile = converter.convertAndSave(new java.net.URL(url), name, new File(database.getDefaultSavingPath()));
@@ -1934,12 +1954,14 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         {
             JOptionPane.showMessageDialog(this, "Your music is being added, please wait patiently.");
             messageLabel.setText("Your music is being added.");
-            addThread = new Thread(()->{addInBatch(chooser.getSelectedFiles());
-            
+            addThread = new Thread(() ->
+            {
+                addInBatch(chooser.getSelectedFiles());
+
             });
             addThread.start();
         }
-        
+
     }
 
     /**
@@ -2162,9 +2184,11 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         }
 
     }
+
     /**
      * Load the detail information of this song
-     * @param reader 
+     *
+     * @param reader
      */
     public void loadAuthorInfo(LyricReader reader)
     {
@@ -2525,7 +2549,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
             });
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ex)
         {
-            Warning.createWarningDialog(ex);      
+            Warning.createWarningDialog(ex);
             //Warning warning = new Warning("Cannot open sound  " + ex.toString(), "Please retry.", ex);
         }
 
@@ -2626,4 +2650,3 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
     }
 
 }
-

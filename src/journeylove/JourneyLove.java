@@ -24,10 +24,18 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,10 +71,11 @@ import static journeylove.Randomizer.randomInt;
 /**
  * A place that nobody can steal our memories.
  * <br>This is a welcome page that can give user surprices.
+ *
  * @author Johnson Gao
  * @author Beautiful Princess Jenny Wang.
  * @since I love you
- * 
+ *
  */
 public class JourneyLove extends JFrame implements ActionListener, MouseListener, ItemListener, KeyListener
 {
@@ -113,7 +122,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
      * 1.cute still<br>
      * 2.WOOW
      */
-   public static final String[] NORTH_WEST_ICON =
+    public static final String[] NORTH_WEST_ICON =
     {
         "HeIsBLBL.jpeg", "cuteStill.jpg", "WOOW.jpg"
     };
@@ -130,7 +139,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
         "beishangliugeiziji",
         "LiangLiangcli"
     };
-    
+
     /**
      * Some addresses of happy music.
      */
@@ -141,7 +150,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
     };
     /**
      * This stores some websites that have sweet video. !
-     * 
+     *
      */
     public static final String[] SWEET_WEBSITES_MUSIC =
     {
@@ -213,7 +222,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
     private JRadioButton missRadioButton;
     private JRadioButton noMissRadioButton;
     private Box missOrNotBox;
-private UIManager.LookAndFeelInfo[] infos;
+    private UIManager.LookAndFeelInfo[] infos;
     private JPanel northPanel;
     private JPanel southPanel;
     private JPanel westPanel;
@@ -225,16 +234,16 @@ private UIManager.LookAndFeelInfo[] infos;
     private Clip soundEffectClip;
     private boolean sound;
     private JMenuBar myMenuBar;
-    private JMenu feedbackMenu,linksMenu;
-    private JMenuItem feedbackItem,mailBoxItem;
+    private JMenu feedbackMenu, linksMenu;
+    private JMenuItem feedbackItem, mailBoxItem;
     private JButton setStyleButton;
     private JComboBox<String> stylesComboBox;
-    
+
     final SecretGardenConnection SGC = new SecretGardenConnection();
 
     /**
      * A place that nobody can steal our memories.
- * <br>This is a welcome page that can give user surprises.
+     * <br>This is a welcome page that can give user surprises.
      */
     public JourneyLove()
     {
@@ -270,7 +279,6 @@ private UIManager.LookAndFeelInfo[] infos;
 //                }
 //            }
 //        });
-        
         /**
          * JLabel
          */
@@ -288,7 +296,6 @@ private UIManager.LookAndFeelInfo[] infos;
         this.majorIconLabel = new JLabel(this.openAutoScaledIcon(MAJOR_ICON[randomInt(0, MAJOR_ICON.length - 1)], 610, 400));
         this.majorIconLabel.addMouseListener(this);
         this.majorIconLabel.setOpaque(false);
-        
 
         this.gotoLabel = new JLabel(openIcon("goto.png"));
         gotoLabel.addMouseListener(this);
@@ -298,13 +305,19 @@ private UIManager.LookAndFeelInfo[] infos;
          * JButton.
          */
         setStyleButton = new JButton("Set Style");
-        setStyleButton.addActionListener((e)->{setLookAndFeel(stylesComboBox.getSelectedIndex());});
-        
+        setStyleButton.addActionListener((e) ->
+        {
+            setLookAndFeel(stylesComboBox.getSelectedIndex());
+        });
+
         //JCombobox
         stylesComboBox = new JComboBox<>(getInstalledLookAndFeels());
         stylesComboBox.setOpaque(false);
         stylesComboBox.setBorder(new TitledBorder("Styles: "));
-        stylesComboBox.addItemListener((e)->{clickSound(SoundOracle.WATER_PRESS_1);});
+        stylesComboBox.addItemListener((e) ->
+        {
+            clickSound(SoundOracle.WATER_PRESS_1);
+        });
         /**
          * JMENU
          */
@@ -322,8 +335,7 @@ private UIManager.LookAndFeelInfo[] infos;
         myMenuBar.setBackground(LovelyColors.BEWITCHED_TREE);
         myMenuBar.add(linksMenu);
         this.setJMenuBar(myMenuBar);
-        
-        
+
         /**
          * JRadioButton.
          */
@@ -351,13 +363,13 @@ private UIManager.LookAndFeelInfo[] infos;
         mainMenuComboBox = new JComboBox<>(MAIN_MENUS);
         mainMenuComboBox.addItemListener(this);
         mainMenuComboBox.setToolTipText("Select where to go next.");
-        
+
         Box setStyleBox = Box.createHorizontalBox();
         setStyleBox.add(stylesComboBox);
         setStyleBox.add(setStyleButton);
         setStyleBox.setOpaque(false);
         setStyleBox.setBorder(BorderFactory.createTitledBorder("Set Your Style"));
-        
+
         /**
          * JPanel.
          */
@@ -378,7 +390,7 @@ private UIManager.LookAndFeelInfo[] infos;
         eastPanel.setOpaque(false);
         this.westPanel = new JPanel(new BorderLayout());
         westPanel.add(westNorthLabel, BorderLayout.NORTH);
-        westPanel.add(setStyleBox,BorderLayout.CENTER);
+        westPanel.add(setStyleBox, BorderLayout.CENTER);
         westPanel.add(westSouthLabel, BorderLayout.SOUTH);
         westPanel.setOpaque(false);
 
@@ -415,10 +427,11 @@ private UIManager.LookAndFeelInfo[] infos;
                 }
             }
         });
-        
-        
-        
-        
+
+        if(!isNetworkOk())
+        {
+            JOptionPane.showMessageDialog(this, "You don't have internet connection. This app requires internet connection.", "Internet Connection", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
@@ -487,6 +500,7 @@ private UIManager.LookAndFeelInfo[] infos;
             case 0:
                 this.messageLabel.setText("Please select one!");
                 break;
+            
             case 1:
                 MemoriesRefresher memoriesRefresher = new MemoriesRefresher();
                 break;
@@ -511,31 +525,31 @@ private UIManager.LookAndFeelInfo[] infos;
                 try
                 {
                     String address = SGC.getMailBoxAddress();
-                    if(address==null)
+                    if (address == null)
                     {
                         messageLabel.setText("You don't have an mailbox yet, please select one.");
                         selectMailBoxAddress();
-                    }else
+                    } else
                     {
-                        if(address.isEmpty())
+                        if (address.isEmpty())
                         {
-                           int confirm= JOptionPane.showConfirmDialog(this, "You don't have an mailbox yet, do you want to connect?", "No MailBox ", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-                           if(confirm == JOptionPane.YES_OPTION)
-                           {
-                               selectMailBoxAddress();
-                           }
-                        }else
+                            int confirm = JOptionPane.showConfirmDialog(this, "You don't have an mailbox yet, do you want to connect?", "No MailBox ", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                            if (confirm == JOptionPane.YES_OPTION)
+                            {
+                                selectMailBoxAddress();
+                            }
+                        } else
                         {
                             openApp(new File(SGC.getMailBoxAddress()));
                         }
                     }
-                } catch (Exception e)
-                {
-            Warning warning = new Warning("An exception has occured when opening your mailbox","Please check the address and retry.",e);
-            
-            SGC.createErrorLog(e);
-                }
-                break;
+            } catch (Exception e)
+            {
+                Warning warning = new Warning("An exception has occured when opening your mailbox", "Please check the address and retry.", e);
+
+                SGC.createErrorLog(e);
+            }
+            break;
             default:
                 System.out.println("uncaught type = " + index);
                 break;
@@ -545,17 +559,17 @@ private UIManager.LookAndFeelInfo[] infos;
     public void openApp(File file)
     {
         Desktop desktop = Desktop.getDesktop();
-        
+
         try
         {
             desktop.open(file);
         } catch (IOException ex)
         {
             //Logger.getLogger(JourneyLove.class.getName()).log(Level.SEVERE, null, ex);
-            new Warning(ex.toString(),"You may want to check your file, reset your mailbox or try again.",ex);
+            new Warning(ex.toString(), "You may want to check your file, reset your mailbox or try again.", ex);
         }
     }
-    
+
     /**
      * Select the address for the mailBox.
      */
@@ -566,7 +580,7 @@ private UIManager.LookAndFeelInfo[] infos;
             JFileChooser choose = new JFileChooser(SGC.getDefaultSavingPath());
             choose.setFileFilter(new FileNameExtensionFilter("Your mailBox as an Executable jar file (.jar)", "jar"));
             int confirm = choose.showOpenDialog(this);
-            if(confirm == JFileChooser.APPROVE_OPTION)
+            if (confirm == JFileChooser.APPROVE_OPTION)
             {
                 SGC.updateMailBoxAddress(choose.getSelectedFile().getAbsolutePath());
                 messageLabel.setText("You have a new mailbox, address updated.");
@@ -575,9 +589,9 @@ private UIManager.LookAndFeelInfo[] infos;
         {
             Logger.getLogger(JourneyLove.class.getName()).log(Level.SEVERE, null, ex);
         }
-               
+
     }
-    
+
     /**
      * This event will be fired for a single click. No backaction are supported.
      *
@@ -825,31 +839,30 @@ private UIManager.LookAndFeelInfo[] infos;
                 Warning warning = new Warning("You should not do that!!!");
                 warning.getContentPane().setBackground(new Color(102, 255, 102));
                 break;
-                        //NO
+            //NO
             default:
                 Warning oobWarning = new Warning("Out of bounce: Unexpected input @ nomissb");
-                //throw new UnsupportedOperationException("Out of bounce: Unexpected input");
+            //throw new UnsupportedOperationException("Out of bounce: Unexpected input");
         }
 
     }
-    
-    
 
     /*Logic Safe Methods*/
-     public String[] getInstalledLookAndFeels(){
+    public String[] getInstalledLookAndFeels()
+    {
         infos = javax.swing.UIManager.getInstalledLookAndFeels();
         String[] infoStrings = new String[infos.length];
-        
+
         for (int i = 0; i < infoStrings.length; i++)
         {
             infoStrings[i] = infos[i].getName();
         }
         return infoStrings;
     }
-     
-     public void setLookAndFeel(int index)
-     {
-         try
+
+    public void setLookAndFeel(int index)
+    {
+        try
         {
             // TODO add your handling code here:
             UIManager.setLookAndFeel(infos[index].getClassName());
@@ -859,10 +872,11 @@ private UIManager.LookAndFeelInfo[] infos;
             messageLabel.setText(ex.toString());
             SGC.createErrorLog(ex);
         }
-     }
+    }
 
     /**
      * Open an icon from the package.
+     *
      * @param addressURL The address of the imageicon.
      * @return The imageicon.
      * @deprecated Replaced by ImageManager.
@@ -877,6 +891,7 @@ private UIManager.LookAndFeelInfo[] infos;
 
     /**
      * Open and scale an icon using default scaling algrotism.
+     *
      * @param addressURL The address of the image.
      * @param width The width of the image.
      * @param height The height of the image.
@@ -890,7 +905,9 @@ private UIManager.LookAndFeelInfo[] infos;
     }
 
     /**
-     * Open an icon from the package using defined width, height and scaling algrotism.
+     * Open an icon from the package using defined width, height and scaling
+     * algrotism.
+     *
      * @param addressURL The address of the image.
      * @param width The width of the image.
      * @param height The height of the image.
@@ -907,8 +924,9 @@ private UIManager.LookAndFeelInfo[] infos;
     }
 
     /**
-     * Open and autoscale an icon in the package, it will not damage the 
+     * Open and autoscale an icon in the package, it will not damage the
      * original ratio of the icon.
+     *
      * @param addressURL
      * @param maxWidth
      * @param maxHeight
@@ -940,19 +958,19 @@ private UIManager.LookAndFeelInfo[] infos;
         }
     }
 
-    
-   /**
-    * Open an icon that is auto scaled to not greater than maximun but not less than minimun.
-    * @deprecated
-    * Using algrotism * both side by default ratio=2.
-    * maximun cannot equal to minimun.
-    * @param addressURL
-    * @param maxWidth
-    * @param maxHeight
-    * @param minWidth
-    * @param minHeight
-    * @return The auto scaled icon.
-    */
+    /**
+     * Open an icon that is auto scaled to not greater than maximun but not less
+     * than minimun.
+     *
+     * @deprecated Using algrotism * both side by default ratio=2. maximun
+     * cannot equal to minimun.
+     * @param addressURL
+     * @param maxWidth
+     * @param maxHeight
+     * @param minWidth
+     * @param minHeight
+     * @return The auto scaled icon.
+     */
     public ImageIcon openAutoScaledIcon(String addressURL, int maxWidth, int maxHeight, int minWidth, int minHeight)
     {
 
@@ -961,33 +979,33 @@ private UIManager.LookAndFeelInfo[] infos;
         int height = originIcon.getIconHeight();
         int width = originIcon.getIconWidth();
 
-        if(maxHeight != minHeight && maxWidth != minWidth)
+        if (maxHeight != minHeight && maxWidth != minWidth)
         {
-        if (height > maxHeight || width > maxWidth || height < minHeight || width < minWidth)
-        {
-            //feedbackLabel.setText("Image are scaled");
-            ///Deal with large image
+            if (height > maxHeight || width > maxWidth || height < minHeight || width < minWidth)
+            {
+                //feedbackLabel.setText("Image are scaled");
+                ///Deal with large image
 
-            while (height < minHeight || width < minWidth)
+                while (height < minHeight || width < minWidth)
+                {
+                    height *= 2;
+                    width *= 2;
+                }
+                while (height > maxHeight || width > maxWidth)
+                {
+                    height /= 2;
+                    width /= 2;
+                }
+                ImageIcon icon = new ImageIcon(new ImageIcon(url).getImage().getScaledInstance(height, width, Image.SCALE_DEFAULT));
+                return icon;
+            } else
             {
-                height *= 2;
-                width *= 2;
+                return originIcon;
             }
-            while (height > maxHeight || width > maxWidth)
-            {
-                height /= 2;
-                width /= 2;
-            }
-            ImageIcon icon = new ImageIcon(new ImageIcon(url).getImage().getScaledInstance(height, width, Image.SCALE_DEFAULT));
-            return icon;
         } else
         {
-            return originIcon;
-        }
-        }else
-        {
-            
-            throw new IllegalArgumentException("You cannot, just cannot make max = min." );
+
+            throw new IllegalArgumentException("You cannot, just cannot make max = min.");
         }
     }
 
@@ -1004,9 +1022,10 @@ private UIManager.LookAndFeelInfo[] infos;
 //        }
         this.openMusic(soundName);
         this.startMusic();
-        soundEffectClip.addLineListener((LineEvent e)->{
+        soundEffectClip.addLineListener((LineEvent e) ->
+        {
             LineEvent.Type type = e.getType();
-            if(type.equals(LineEvent.Type.STOP))
+            if (type.equals(LineEvent.Type.STOP))
             {
                 soundEffectClip.close();
             }
@@ -1031,7 +1050,7 @@ private UIManager.LookAndFeelInfo[] infos;
             //warning.setExceptionString(e.toString());
 //            e.printStackTrace();
 //            System.err.println("ERR YOUR MUSIC @OPENING");
-            Warning warning = new Warning("ERR PLAYING SOUND" , e.toString(),e);
+            Warning warning = new Warning("ERR PLAYING SOUND", e.toString(), e);
             warning.getContentPane().setBackground(Color.GREEN);
         }
 
@@ -1109,11 +1128,47 @@ private UIManager.LookAndFeelInfo[] infos;
             desktop.browse(toUrl);
         } catch (IOException | URISyntaxException e)
         {
-            Warning warning = new Warning("ERROR OPENING WEBSITE","PLEASE RETRY",e);
+            Warning warning = new Warning("ERROR OPENING WEBSITE", "PLEASE RETRY", e);
             //warning.setSuggestion(e.toString());
 
         }
 
+    }
+
+    public static boolean isNetworkOk()
+    {
+        try
+        {
+            URL url = new URL("https://captive.85vocab.com");
+            URLConnection conn = url.openConnection();
+            //conn.addRequestProperty("cookie", "me=3266933");
+            InputStream s = conn.getInputStream();
+            StringBuilder textBuilder = new StringBuilder();
+            try (Reader reader = new BufferedReader(new InputStreamReader(s, Charset.forName(StandardCharsets.UTF_8.name()))))
+            {
+                int c = 0;
+                while ((c = reader.read()) != -1)
+                {
+                    textBuilder.append((char) c);
+                }
+            }
+            String result = new String(textBuilder);
+
+            if (result.equals("Success"))
+            {
+                return true;
+            }else
+            {
+                System.out.println(result);
+                return false;
+            }
+
+        } catch (IOException ex)
+        {
+            //Logger.getLogger(JourneyLove.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -1159,7 +1214,7 @@ private UIManager.LookAndFeelInfo[] infos;
 //            java.util.logging.Logger.getLogger(ImagelistTool.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
 //        }
         //</editor-fold>
-        
+
         JourneyLove journeyLove = new JourneyLove();
         journeyLove.addKeyListener(journeyLove);
         // TODO code application logic here

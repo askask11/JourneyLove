@@ -343,7 +343,7 @@ public class MyMusic
         } catch (IOException | UnsupportedAudioFileException | NullPointerException | JavaLayerException | LineUnavailableException e)
         {
             flag = false;
-            // e.printStackTrace();
+             e.printStackTrace();
         }
         //Logger.getLogger(MyMusic.class.getName()).log(Level.SEVERE, null, ex);
         return flag;
