@@ -70,7 +70,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
     public static final long serialVersionUID = 1L;
     final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
     //final LovelyColors LC = new LovelyColors();
-    final static SecretGardenConnection SGC = new SecretGardenConnection();
+    //final static SecretGardenConnection SGC = new SecretGardenConnection();
     /**
      * Holds things for the title.
      */
@@ -87,7 +87,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
     private JPanel southPanel;
     private JPanel eastPanel;
     private JPanel centralPanel;
-    private SecretGardenConnection conn;
+    //private SecretGardenConnection conn;
     private JTable imageTable;
     private JScrollPane tablePane;
     private JRadioButton addRadioButton, removeRadioButton, changeRadioButton, swapRadioButton,addBatchRadioButton;
@@ -118,7 +118,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
     private JPopupMenu listComboBoxMenu;
     private JMenuItem listComboBoxEditItem, createItem;
     
-    final static ImageManager IM = new ImageManager();
+    public final static ImageManager IM = new ImageManager();
 
     public ImageList()
     {
@@ -136,15 +136,6 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
         this.getContentPane().setBackground(LovelyColors.GLASS_GALL);
         this.setDefaultCloseOperation(HIDE_ON_CLOSE);
         this.setLayout(new BorderLayout());
-        try
-        {
-            conn = new SecretGardenConnection();
-        } catch (Exception e)
-        {
-            Warning warning = new Warning("Cannot connect to database, do NOT open two applacations @the same time",
-                    "This will be closed soon.");
-            this.dispose();
-        }
 
         /**
          * JMenu
@@ -242,7 +233,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
             importFileButton.setVisible(index == 0);
             clickSound(SoundOracle.WATER_PRESS_3);
         });
-        try
+        try(SecretGardenConnection SGC = SecretGardenConnection.getDefaultInstance())
         {
             listComboBox = new JComboBox<>(SGC.getImageSublists());
             //listComboBox.setBorder(BorderFactory.createTitledBorder("Choose Your List:"));
@@ -255,7 +246,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
                 refreshTable();
                 clickSound(SoundOracle.WATER_PRESS_3);
             });
-        } catch (SQLException ex)
+        } catch (SQLException|ClassNotFoundException ex)
         {
             Logger.getLogger(ImageList.class.getName()).log(Level.SEVERE, null, ex);
             System.exit(1);
@@ -380,14 +371,14 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
     public ArrayList<DisplayImage> getImages()
     {
         int index = listComboBox.getSelectedIndex();
-        try
+        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             if (index == 0)
             {
-                this.imageList = conn.getDisplayImage();
+                this.imageList = database.getDisplayImage();
             } else
             {
-                this.imageList = conn.getDisplayImage(SecretGardenConnection.IMAGES_SUBLIST_PREFIX + listComboBox.getItemAt(index));
+                this.imageList = database.getDisplayImage(SecretGardenConnection.IMAGES_SUBLIST_PREFIX + listComboBox.getItemAt(index));
             }
             
         } catch (Exception e)
@@ -618,14 +609,14 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
             {
                 name = getFileName(addressField.getText());
             }
-            try
+            try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
             {
                 if (listComboBox.getSelectedIndex() == 0)
                 {
-                    SGC.insertImageIntoList(new DisplayImage(name, url, type, Randomizer.randomInt(1000, 9999), description));
+                    database.insertImageIntoList(new DisplayImage(name, url, type, Randomizer.randomInt(1000, 9999), description));
                 } else
                 {
-                    SGC.insertIntoImageSublist(new DisplayImage(name, url, type, Randomizer.randomInt(1000, 9999), description), listComboBox.getItemAt(listComboBox.getSelectedIndex()));
+                    database.insertIntoImageSublist(new DisplayImage(name, url, type, Randomizer.randomInt(1000, 9999), description), listComboBox.getItemAt(listComboBox.getSelectedIndex()));
                 }
                 
                 clearField();
@@ -647,14 +638,14 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
      */
     public void removeFromImageList()
     {
-        try
+        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             int id = imageList.get(imageTable.getSelectedRow()).getId();
             
-            SGC.removeFromImageDisplayList(id, getSelectedList());
+            database.removeFromImageDisplayList(id, getSelectedList());
             refreshTable();
             clickSound(SoundOracle.UI_DINGDONG);
-        } catch (SQLException e)
+        } catch (SQLException|ClassNotFoundException e)
         {
             Warning warning = new Warning("Failed to connect to DB. Detail: " + e.toString());
         } catch (ArrayIndexOutOfBoundsException aioobe)
@@ -687,14 +678,14 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
             description = imageChosen.getDescription();
         }
         
-        try
+        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             id = imageList.get(imageTable.getSelectedRow()).getId();
-            SGC.updateImageDisplayList(id, new DisplayImage(newName, newAddress, newType, id, description), getSelectedList());
+            database.updateImageDisplayList(id, new DisplayImage(newName, newAddress, newType, id, description), getSelectedList());
             refreshTable();
             clearField();
             clickSound(SoundOracle.UI_DINGDONG);
-        } catch (SQLException e)
+        } catch (SQLException|ClassNotFoundException e)
         {
             Warning warning = new Warning("Sorry cannot connect to DB " + e.toString());
         } catch (ArrayIndexOutOfBoundsException aioobe)
@@ -725,9 +716,9 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
     {
         if (swapId1 != 0 && swapId2 != 0 && swapId1 != swapId2)
         {
-            try
+            try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
             {
-                SGC.swapImageDisplayList(swapId1, swapId2, getSelectedList());
+                database.swapImageDisplayList(swapId1, swapId2, getSelectedList());
                 swapId1 = 0;
                 swapId2 = 0;
                 swapLabel1.setText("--> # ");
@@ -775,7 +766,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
     {
         DisplayImage[] displayImages = new DisplayImage[files.length];
         
-        try
+        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             for (int i = 0; i < files.length; i++)
             {
@@ -783,7 +774,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
                 tempImg.setDescription("");
                 displayImages[i] = tempImg;
             }
-            conn.insertImagesInBatch(displayImages, getSelectedList());
+            database.insertImagesInBatch(displayImages, getSelectedList());
         } catch (Exception ex)
         {
             //Logger.getLogger(ImageList.class.getName()).log(Level.SEVERE, null, ex);

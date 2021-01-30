@@ -30,7 +30,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
-import static journeylove.ImageList.SGC;
+//import static journeylove.ImageList.SGC;
 
 /**
  * This class is to allow user to manager their lists.
@@ -159,16 +159,16 @@ public class ManagePlaylist extends JFrame implements ActionListener
      */
     public Object[][] tableData()
     {
-        try
+        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
-            String[] sublists = SGC.getImageSublists();
+            String[] sublists = database.getImageSublists();
             Object [][] data = new Object[sublists.length][1];
             for(int i=0; i<sublists.length;i++)
             {
                 data[i][0] = sublists[i];
             }
            return data; 
-        } catch (SQLException ex)
+        } catch (SQLException|ClassNotFoundException ex)
         {
             Logger.getLogger(ManagePlaylist.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -206,12 +206,12 @@ public class ManagePlaylist extends JFrame implements ActionListener
                         break;
                     }
                 default:
-                    try
+                    try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
                     {
-                        SGC.dropImageSublist((String) listTable.getValueAt(index, 0));
+                        database.dropImageSublist((String) listTable.getValueAt(index, 0));
                         clickSound(SoundOracle.UI_DINGDONG);
                         refreshTable();
-                    } catch (SQLException ex)
+                    } catch (SQLException|ClassNotFoundException ex)
                     {
                         Logger.getLogger(ManagePlaylist.class.getName()).log(Level.SEVERE, null, ex);
                         Warning warn = new Warning("Failed to delete your playlist because of " + ex.getMessage(),"Please refer to information above",ex,false);

@@ -30,6 +30,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -82,7 +83,7 @@ public class MusicConvertTool extends JFrame
     private JFileChooser chooser;
     private int type = MyMusic.TYPE_UNDEFINED;
     final MusicConverter CONVERTER = new MusicConverter();
-    final SecretGardenConnection CONNECTION = new SecretGardenConnection();
+    //final SecretGardenConnection CONNECTION = new SecretGardenConnection();
     private JRadioButton saveToDefaultRadioButton, saveToDestRadioButton;
     private String saveAddress = "", lyricAddress = "", time = "";
     private JMenuBar myBar;
@@ -172,18 +173,19 @@ public class MusicConvertTool extends JFrame
         {
             clickSound(SoundOracle.DOOR_UNLOCKED_SOUND);
             JFileChooser saver;
-            try
+            try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
             {
-                saver = new JFileChooser(CONNECTION.getDefaultSavingPath());
+                saver = new JFileChooser(database.getDefaultSavingPath());
                 saver.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 int confirmed = saver.showSaveDialog(null);
                 if (confirmed == JFileChooser.APPROVE_OPTION)
                 {
-                    CONNECTION.updateDefaultSavingPath(saver.getSelectedFile().getAbsolutePath());
+                    database.updateDefaultSavingPath(saver.getSelectedFile().getAbsolutePath());
                 }
-            } catch (SQLException ex)
+            } catch (SQLException|ClassNotFoundException ex)
             {
                 Logger.getLogger(MusicConvertTool.class.getName()).log(Level.SEVERE, null, ex);
+                Warning.createWarningDialog(ex);
             }
 
         }
@@ -352,9 +354,9 @@ public class MusicConvertTool extends JFrame
      */
     public void checkDefaultAddress()
     {
-        try
+        try(SecretGardenConnection db = SecretGardenConnection.getDefaultInstance())
         {
-            if (CONNECTION.getDefaultSavingPath().isEmpty())
+            if (db.getDefaultSavingPath().isEmpty())
             {
                 messageLabel.setText("You don't have an saved download address yet!");
             }
@@ -460,15 +462,16 @@ public class MusicConvertTool extends JFrame
      * @throws IOException
      * @throws JavaLayerException
      */
-    public File confirmReadFromOnline() throws SQLException, IOException, JavaLayerException
+    public File confirmReadFromOnline() throws SQLException, IOException, JavaLayerException,ClassNotFoundException
     {
         String outPath;
         File convertedFile = null;
+        SecretGardenConnection db = SecretGardenConnection.getDefaultInstance();
         if (!urlField.getText().isEmpty() && !nameField.getText().isEmpty())
         {
             if (saveToDefaultRadioButton.isSelected())
             {
-                outPath = CONNECTION.getDefaultSavingPath();
+                outPath = db.getDefaultSavingPath();
                 if (!outPath.isEmpty())
                 {
 
@@ -500,8 +503,7 @@ public class MusicConvertTool extends JFrame
             }
         } else
         {
-            Warning warning = new Warning("You must enter URL!!");
-            warning.pack();
+            JOptionPane.showMessageDialog(this, "You must enter a vaild URL!","Vaild URL needed",JOptionPane.ERROR_MESSAGE);
         }
         return convertedFile;
     }
@@ -530,11 +532,11 @@ public class MusicConvertTool extends JFrame
         File convertedFile = null;
         if (saveToDefaultRadioButton.isSelected())
         {
-            try
+            try(SecretGardenConnection db = SecretGardenConnection.getDefaultInstance())
             {
-                address = CONNECTION.getDefaultSavingPath();
+                address = db.getDefaultSavingPath();
 
-            } catch (SQLException ex)
+            } catch (SQLException|ClassNotFoundException ex)
             {
                 Warning.createWarningDialog(ex);
                 //Logger.getLogger(MusicConvertTool.class.getName()).log(Level.SEVERE, null, ex);
@@ -587,7 +589,7 @@ public class MusicConvertTool extends JFrame
             try
             {
                 convertedFile = confirmReadFromOnline();
-            } catch (SQLException ex)
+            } catch (SQLException|ClassNotFoundException ex)
             {
                 Logger.getLogger(MusicConvertTool.class.getName()).log(Level.SEVERE, null, ex);
                 messageLabel.setText("Cannot connect to your database.");
@@ -648,12 +650,12 @@ public class MusicConvertTool extends JFrame
         {
             if (toUpdateRadioButton.isSelected())
             {
-                try
+                try(SecretGardenConnection db = SecretGardenConnection.getDefaultInstance())
                 {
                     MyMusic music = new MyMusic(nameField.getText(), convertedFile.getAbsolutePath(), MyMusic.TYPE_LOCAL);
                     music.setLyricAddress(lyricAddress);
                     music.setTime(time);
-                    CONNECTION.updateMusicList(id, music);
+                    db.updateMusicList(id, music);
                     backgroundMusic.refreshTabel();
                 } catch (Exception ex)
                 {

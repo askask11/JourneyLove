@@ -17,11 +17,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.IOException;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineEvent;
@@ -36,14 +33,12 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeListener;
 import static journeylove.ImageList.IM;
 
 /**
@@ -68,7 +63,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
             currentLyricLabel,
             nextLyricLabel,
             settingLabel,
-            musicIconLabel,delayLabel;
+            musicIconLabel, delayLabel;
     /**
      * This button disposes the frame.
      */
@@ -78,8 +73,8 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
             addSizeButton,
             reduceSizeButton,
             defaultDelayButton;
-    
-   // private JTextField offsetField;
+
+    // private JTextField offsetField;
     //Panels declearing seq: N - S - W - E
     /**
      * Mother panel on the north.
@@ -147,7 +142,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
     private javax.sound.sampled.Clip effectClip;
     private Rectangle boundsShortCut;
     private BackgroundMusic backgroundMusic;
-    private JTextField nameField,artistField,editorField,albumField;
+    private JTextField nameField, artistField, editorField, albumField;
     private JPanel infoPanel;
 
     /**
@@ -159,11 +154,11 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
     }
 
     /**
-     * This is a sub frame based on BackgroundMusic class, which offers
-     * the function of viewing lyric with the song and do some adjustment 
-     * to the main musicplayer. This must be displayed with the main musicplayer.
-     * 
-     * @param bgmFrame 
+     * This is a sub frame based on BackgroundMusic class, which offers the
+     * function of viewing lyric with the song and do some adjustment to the
+     * main musicplayer. This must be displayed with the main musicplayer.
+     *
+     * @param bgmFrame
      */
     public LyricWindow(BackgroundMusic bgmFrame)
     {
@@ -280,6 +275,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
                 clickSound(SoundOracle.TINY_BUTTON_SOUND);
                 infoPanel.setVisible(!infoPanel.isVisible());
             }
+
             @Override
             public void mouseEntered(MouseEvent e)
             {
@@ -300,8 +296,6 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         });
         delayLabel = new JLabel("Delay: 500");
         //offsetLabel = new JLabel("|| Offset: ");
-        
-        
 
         /**
          * JButton.
@@ -318,7 +312,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         reduceSizeButton.addActionListener(this);
         this.defaultDelayButton = new JButton("Default");
         defaultDelayButton.addActionListener(this);
-        
+
         /**
          * JTextfield.
          */
@@ -396,7 +390,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         {
             int delay = 1000 - delaySlider.getValue();
             bgmFrame.getTimer().setDelay(delay);
-            delayLabel.setText("Lyric Delay: "+ delay);
+            delayLabel.setText("Lyric Delay: " + delay);
         }));
         delaySlider.setToolTipText("<html>Faster speed(lower delay) will allow your lyric to be more percise, but will also use more system resource"
                 + "<br>(Speed-Priority/Resource-Priority)</html>");
@@ -430,15 +424,14 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         delayBox.add(defaultDelayButton);
 //        delayBox.add(offsetLabel);
 //        delayBox.add(offsetField);
-        
+
         delayBox.setOpaque(false);
-                
+
         this.southButtonPanel = new JPanel(new FlowLayout());
         southButtonPanel.add(settingLabel);
         southButtonPanel.add(musicIconLabel);
         southButtonPanel.setOpaque(false);
 
-        
         this.settingPanel = new JPanel(new GridLayout(4/*ROWS*/, 0/*COLUMN*/));
         settingPanel.add(setFontBox);
         settingPanel.add(setForegroundBox);
@@ -446,7 +439,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         settingPanel.add(delayBox);
         settingPanel.setOpaque(false);
         settingPanel.setVisible(false);
-        
+
         this.infoPanel = new JPanel(new GridLayout(0, 4));
         infoPanel.add(nameField);
         infoPanel.add(artistField);
@@ -454,16 +447,13 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         infoPanel.add(albumField);
         infoPanel.setOpaque(false);
         infoPanel.setVisible(false);
-        
-                
-        
 
         this.southPanel = new JPanel(new BorderLayout());
 //southPanel.add(returnButton);
         southPanel.setComponentPopupMenu(contentPaneMenu);
         southPanel.add(southButtonPanel, BorderLayout.NORTH);
         southPanel.add(infoPanel, BorderLayout.CENTER);
-        southPanel.add(settingPanel,BorderLayout.SOUTH);
+        southPanel.add(settingPanel, BorderLayout.SOUTH);
         southPanel.setOpaque(false);
         centralPanel = new JPanel(new GridLayout(3, 0, 2, 0));
 
@@ -485,7 +475,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
 //setUndecorated(true);
         this.setVisible(true);
     }
-    
+
     /**
      * Edit the offset, which located in the <code>lyricReader</code> of the
      * main music player.
@@ -502,7 +492,6 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
 //            JOptionPane.showMessageDialog(this, " <br> Detail: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
 //        }
 ////    }
-
     @Override
     public void actionPerformed(ActionEvent e)
     {
@@ -566,7 +555,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
             {
                 this.getContentPane().setBackground(color);
             }
-        }else if(source.equals(defaultDelayButton))
+        } else if (source.equals(defaultDelayButton))
         {
             delaySlider.setValue(500);
             backgroundMusic.getTimer().setDelay(500);
@@ -594,6 +583,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
     {
         return albumField;
     }
+
     public void ClearAllFields()
     {
         nameField.setText("");
@@ -601,7 +591,6 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         editorField.setText("");
         albumField.setText("");
     }
-    
 
     @Override
     public void itemStateChanged(ItemEvent e)
@@ -633,9 +622,11 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         {
             new Warning("Please enter a positive number. For "
                     + line1FontSizeComboBox.getSelectedItem()
-                    + " \n because of " + ex.toString() + "", "Check your number.",ex,true,()->{
-                    line1FontSizeComboBox.requestFocus();
-                    line1FontSizeComboBox.setPopupVisible(true);});
+                    + " \n because of " + ex.toString() + "", "Check your number.", ex, true, () ->
+            {
+                line1FontSizeComboBox.requestFocus();
+                line1FontSizeComboBox.setPopupVisible(true);
+            });
         }
     }
 
@@ -651,9 +642,11 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         {
             new Warning("<html>Please enter a positive number. For "
                     + line2FontSizeComboBox.getSelectedItem()
-                    + " <br> because of " + nfe.toString() + "</html>", "Check your number.",nfe,true,()->{
-                    line2FontSizeComboBox.requestFocus();
-                    line2FontSizeComboBox.setPopupVisible(true);});
+                    + " <br> because of " + nfe.toString() + "</html>", "Check your number.", nfe, true, () ->
+            {
+                line2FontSizeComboBox.requestFocus();
+                line2FontSizeComboBox.setPopupVisible(true);
+            });
         }
     }
 
@@ -669,14 +662,17 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         {
             Warning warning = new Warning("<html>Please enter a positive number. For "
                     + line3FontSizeComboBox.getSelectedItem()
-                    + " <br> because of " + nfe.toString() + "</html>", "Check your number.",nfe,true,()->
-                    {line3FontSizeComboBox.requestFocus();
-                    line3FontSizeComboBox.setPopupVisible(true);});
+                    + " <br> because of " + nfe.toString() + "</html>", "Check your number.", nfe, true, () ->
+            {
+                line3FontSizeComboBox.requestFocus();
+                line3FontSizeComboBox.setPopupVisible(true);
+            });
         }
     }
 
     /**
      * A short cut to set the size of the font of a component.
+     *
      * @param component The component to be edited.
      * @param size The target size.
      */
@@ -717,8 +713,9 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
     }
 
     /**
-     * This method is for produce short sound effects, the clip will not
-     * under monitor or be operated.
+     * This method is for produce short sound effects, the clip will not under
+     * monitor or be operated.
+     *
      * @param soundName The name of the sound to be displayed.
      */
     public void clickSound(String soundName)
@@ -738,17 +735,16 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
             effectClip.start();
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ex)
         {
-            Warning warning = new Warning("Cannot open sound  " + ex.toString(),"",ex,false);
+            Warning warning = new Warning("Cannot open sound  " + ex.toString(), "", ex, false);
         }
-        
 
     }
 
     /**
      * Test main method.
-     * @param args 
+     *
+     * @param args
      */
-    
     public static void main(String[] args)
     {
         BackgroundMusic backgroundMusic1 = new BackgroundMusic();

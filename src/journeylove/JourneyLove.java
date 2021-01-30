@@ -11,6 +11,7 @@ package journeylove;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Image;
@@ -239,8 +240,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
     private JButton setStyleButton;
     private JComboBox<String> stylesComboBox;
 
-    final SecretGardenConnection SGC = new SecretGardenConnection();
-
+    //final SecretGardenConnection SGC = new SecretGardenConnection();
     /**
      * A place that nobody can steal our memories.
      * <br>This is a welcome page that can give user surprises.
@@ -428,10 +428,14 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
             }
         });
 
-        if(!isNetworkOk())
+        EventQueue.invokeLater(() ->
         {
-            JOptionPane.showMessageDialog(this, "You don't have internet connection. This app requires internet connection.", "Internet Connection", JOptionPane.ERROR_MESSAGE);
-        }
+            if (!isNetworkOk())
+            {
+                JOptionPane.showMessageDialog(this, "You don't have internet connection. This app requires internet connection.", "Internet Connection", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
     }
 
     /**
@@ -500,7 +504,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
             case 0:
                 this.messageLabel.setText("Please select one!");
                 break;
-            
+
             case 1:
                 MemoriesRefresher memoriesRefresher = new MemoriesRefresher();
                 break;
@@ -522,9 +526,9 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
                 CipherWindow cipherWindow = new CipherWindow();
                 break;
             case 6:
-                try
+                try (SecretGardenConnection sgc = new SecretGardenConnection())
                 {
-                    String address = SGC.getMailBoxAddress();
+                    String address = sgc.getMailBoxAddress();
                     if (address == null)
                     {
                         messageLabel.setText("You don't have an mailbox yet, please select one.");
@@ -540,14 +544,14 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
                             }
                         } else
                         {
-                            openApp(new File(SGC.getMailBoxAddress()));
+                            openApp(new File(sgc.getMailBoxAddress()));
                         }
                     }
             } catch (Exception e)
             {
-                Warning warning = new Warning("An exception has occured when opening your mailbox", "Please check the address and retry.", e);
-
-                SGC.createErrorLog(e);
+                //Warning warning = new Warning("An exception has occured when opening your mailbox", "Please check the address and retry.", e);
+                Warning.createWarningDialog(e);
+                //sgc.createErrorLog(e);
             }
             break;
             default:
@@ -575,14 +579,14 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
      */
     public void selectMailBoxAddress()
     {
-        try
+        try (SecretGardenConnection db = new SecretGardenConnection())
         {
-            JFileChooser choose = new JFileChooser(SGC.getDefaultSavingPath());
+            JFileChooser choose = new JFileChooser(db.getDefaultSavingPath());
             choose.setFileFilter(new FileNameExtensionFilter("Your mailBox as an Executable jar file (.jar)", "jar"));
             int confirm = choose.showOpenDialog(this);
             if (confirm == JFileChooser.APPROVE_OPTION)
             {
-                SGC.updateMailBoxAddress(choose.getSelectedFile().getAbsolutePath());
+                db.updateMailBoxAddress(choose.getSelectedFile().getAbsolutePath());
                 messageLabel.setText("You have a new mailbox, address updated.");
             }
         } catch (SQLException ex)
@@ -870,7 +874,8 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
         {
             Logger.getLogger(SetLookAndFeel.class.getName()).log(Level.SEVERE, null, ex);
             messageLabel.setText(ex.toString());
-            SGC.createErrorLog(ex);
+            Warning.createWarningDialog(ex);
+            //SGC.createErrorLog(ex);
         }
     }
 
@@ -1139,7 +1144,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
     {
         try
         {
-            URL url = new URL("https://captive.85vocab.com");
+            URL url = new URL("https://captive.apple.com");
             URLConnection conn = url.openConnection();
             //conn.addRequestProperty("cookie", "me=3266933");
             InputStream s = conn.getInputStream();
@@ -1157,7 +1162,7 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
             if (result.equals("Success"))
             {
                 return true;
-            }else
+            } else
             {
                 System.out.println(result);
                 return false;

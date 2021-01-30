@@ -46,7 +46,7 @@ import javazoom.jl.decoder.JavaLayerException;
  *
  * @author Johnson Gao For his cute & beautiful girlfriend Jenny. >v<
  */
-public class SecretGardenConnection
+public class SecretGardenConnection implements AutoCloseable
 {
 
     Connection dbConn = null;
@@ -1598,6 +1598,17 @@ public class SecretGardenConnection
             System.out.println("SQL CONNECTION ERROR");
             sqle.printStackTrace(System.err);
         }
+    }
+
+    public static SecretGardenConnection getDefaultInstance() throws ClassNotFoundException, SQLException
+    {
+        return new SecretGardenConnection();
+    }
+    
+    @Override
+    public void close() throws SQLException
+    {
+        this.dbConn.close();
     }
 
 }

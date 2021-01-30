@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -118,7 +119,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
     /**
      * The database connection obj.
      */
-    private SecretGardenConnection database = new SecretGardenConnection();
+    //private SecretGardenConnection database = new SecretGardenConnection();
     /**
      * The table header of the music table.
      */
@@ -290,10 +291,10 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         this.getContentPane().setBackground(LovelyColors.TRUE_BLUSH);
         this.setDefaultCloseOperation(HIDE_ON_CLOSE);
         this.setLayout(new BorderLayout());
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             rotatingMethod = database.getInfoFromPerferList(database.PERF_KEY_MUSIC_PLAYMODE);
-        } catch (SQLException ex)
+        } catch (SQLException | ClassNotFoundException ex)
         {
             Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -341,12 +342,13 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                         break;
                     default:
                     {//In case of non-sence, use default value "sequence";
-                        try
+                        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
                         {
                             //Replace the unknown value to sequence rotate..
                             database.updatePreferenceList(database.PERF_KEY_MUSIC_PLAYMODE, SEQUENCE_ROTATE);
-                        } catch (SQLException ex)
+                        } catch (SQLException | ClassNotFoundException ex)
                         {
+                            Warning.createWarningDialog(ex);
                             Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }//final update with this
@@ -846,7 +848,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         chooser.setFileFilter(MUSIC_FILTER);
 
         //Check default saving address status.
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             String defaultSaving = database.getDefaultSavingPath();
             if (defaultSaving == null || defaultSaving.isEmpty())
@@ -857,15 +859,16 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
 //                    JOptionPane.showMessageDialog(this, "Please set your default saving address in the file chooder poped up.");
 //                });
 //                setDefaultSavingAddress();
-                int conf =JOptionPane.showConfirmDialog(this, "You don't have a default saving address yet. Do you want to set a default saving address?", "No Saving Address", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-                if(conf==JOptionPane.YES_OPTION)
+                int conf = JOptionPane.showConfirmDialog(this, "You don't have a default saving address yet. Do you want to set a default saving address?", "No Saving Address", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                if (conf == JOptionPane.YES_OPTION)
                 {
                     setDefaultSavingAddress();
                 }
             }
-        } catch (SQLException ex)
+        } catch (SQLException|ClassNotFoundException ex)
         {
             Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
+            Warning.createWarningDialog(ex);
         }
 
         //Add listenerL listen to the keyboard.
@@ -976,14 +979,14 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
 
     public void restoreMusicPlayMode(String mode)
     {
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             database.updatePreferenceList(database.PERF_KEY_MUSIC_PLAYMODE, mode);
-        } catch (SQLException ex)
+        } catch (SQLException | ClassNotFoundException ex)
         {
 //            Warning warning = new Warning(ex.toString());
 //            warning.getContentPane().setBackground(Color.white);
-//            Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
             Warning.createWarningDialog(ex);
         }
     }
@@ -1063,10 +1066,10 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
      */
     public ArrayList<MyMusic> getMyMusics()
     {
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             return musicList = database.getMyMusics();
-        } catch (SQLException e)
+        } catch (SQLException | ClassNotFoundException e)
         {
 //            Warning warning = new Warning(e.getMessage());//call the warning class
 //            warning.setSuggestion("Please check if you have opened 2 apps in the same time.");
@@ -1286,18 +1289,19 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         } else if (source.equals(saveCheckBox))
         {
             clickSound(SoundOracle.TINY_BUTTON_SOUND);
-            try
+            try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
             {
                 String dfp = database.getDefaultSavingPath();
-                if (dfp==null||dfp.isEmpty())
+                if (dfp == null || dfp.isEmpty())
                 {
                     messageLabel.setText("You don't have your default address!! Please  set it up.");
                     setDefaultSavingAddress();
                 }
-            } catch (SQLException ex)
+            } catch (SQLException | ClassNotFoundException ex)
             {
                 Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, "Cannot contact your database.", ex);
                 messageLabel.setText("Cannot contact your database.");
+                Warning.createWarningDialog(ex);
             }
         } else if (source.equals(defaultSaveItem))
         {
@@ -1510,7 +1514,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
      */
     public void setDefaultSavingAddress()
     {
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             JFileChooser saver = new JFileChooser(database.getDefaultSavingPath());
             saver.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -1520,8 +1524,9 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                 database.updateDefaultSavingPath(saver.getSelectedFile().getAbsolutePath());
                 messageLabel.setText("Your default saving address has been updated!");
             }
-        } catch (SQLException ex)
+        } catch (SQLException | ClassNotFoundException ex)
         {
+            Warning.createWarningDialog(ex);
             Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, "Cannot contact your database.", ex);
         }
     }
@@ -1642,14 +1647,14 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         MyMusic music = new MyMusic(name, url, type, id, "", lyricUrl);
         if (music.isLegal())
         {
-            try
+            try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
             {
                 database.addIntoMusicList(music);
                 refreshTabel();
                 messageLabel.setText("Music successfully added.");
                 clearAllFields();
                 clickSound(SoundOracle.UI_DINGDONG);
-            } catch (SQLException ex)
+            } catch (SQLException | ClassNotFoundException ex)
             {
                 //Warning warning = new Warning(ex.toString()+ "Failed to save your lovely music.",);
                 //ex.printStackTrace(System.err);
@@ -1693,16 +1698,31 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
 
         //read info
         MyMusic music = new MyMusic(name, url, MyMusic.TYPE_ONLINE);
-        String path = database.getDefaultSavingPath();
+        String path;
+        boolean hasSavingAddress = true;
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        {
+            path = database.getDefaultSavingPath();
+            if (path == null || path.isEmpty())
+            {
+                hasSavingAddress = false;
+            }
+        } catch (SQLException | ClassNotFoundException e)
+        {
+            Warning.createWarningDialog(e);
+            path = "./";
+            hasSavingAddress = false;
+        }
+
         File convertedFile;
 
         ///see if the msuci is legal and read the time of the music.
         if (music.isLegal())
         {
-            if (path!=null&&!path.isEmpty())
+            if (hasSavingAddress)
             {//create a music format converter.
                 MusicConverter converter = new MusicConverter();
-                convertedFile = converter.convertAndSave(new java.net.URL(url), name, new File(database.getDefaultSavingPath()));
+                convertedFile = converter.convertAndSave(new java.net.URL(url), name, new File(path));
                 insertIntoMusicList(4, name, convertedFile.getAbsolutePath(), MyMusic.TYPE_LOCAL, lyricUrl);
                 messageLabel.setText("Your music has successfully downloaded and saved into your list!");
                 clickSound(SoundOracle.UI_DINGDONG);
@@ -1741,9 +1761,18 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         String url = urlField.getText();
         int index = musicTable.getSelectedRow();
         int id = musicList.get(index).getId();
-
+        String path = "./";
+        boolean hasSavingAddress = true;
         //get the default saving path
-        String path = database.getDefaultSavingPath();
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        {
+            path = database.getDefaultSavingPath();
+            hasSavingAddress = (path != null && !path.isEmpty());
+        } catch (SQLException | ClassNotFoundException e)
+        {
+            Warning.createWarningDialog(e);
+            hasSavingAddress = false;
+        }
         File convertedFile;
         if (name.isEmpty())
         {
@@ -1758,17 +1787,25 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         MyMusic music = new MyMusic(name, url, MyMusic.TYPE_ONLINE);
         if (music.isLegal())//see if it is a real readable music format, and calculate time length.
         {
-            if (path!=null&&!path.isEmpty())
+            if (hasSavingAddress)
             {
                 MusicConverter converter = new MusicConverter();
-                convertedFile = converter.convertAndSave(new java.net.URL(url), name, new File(database.getDefaultSavingPath()));
+                convertedFile = converter.convertAndSave(new java.net.URL(url), name, new File(path));
                 urlField.setText(convertedFile.getAbsolutePath());
                 typeBox.setSelectedIndex(0);
-                database.updateMusicList(id, new MyMusic(name, url, MyMusic.TYPE_LOCAL));
+                try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+                {
+                    database.updateMusicList(id, new MyMusic(name, url, MyMusic.TYPE_LOCAL));
+                    messageLabel.setText("Your music are successfully downloaded and saved into your list!");
+
+                } catch (SQLException | ClassNotFoundException sqle)
+                {
+                    Warning.createWarningDialog(sqle);
+                }
                 //src.addIntoMusicList(new MyMusic(name, url, MyMusic.TYPE_LOCAL, randomInt(1000, 9999)));
                 //updateMusicList();
                 //MyMusic music = new MyMusic(name, url,0);
-                messageLabel.setText("Your music are successfully downloaded and saved into your list!");
+
                 clickSound(SoundOracle.UI_DINGDONG);
             } else
             {
@@ -1793,7 +1830,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
     public void updateMusicList()
     {
         //messageLabel.setText("Verifying your file...");
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             int row = musicTable.getSelectedRow();
             int id = musicList.get(row).getId();
@@ -1832,7 +1869,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
 
             }
 
-        } catch (NumberFormatException | SQLException e)
+        } catch (NumberFormatException | SQLException | ClassNotFoundException e)
         {
 //            Warning warning = new Warning(e.toString());
             Warning.createWarningDialog(e);
@@ -1855,7 +1892,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
      */
     public void deleteFromMusicList()
     {
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             int row = musicTable.getSelectedRow();
             int id = musicList.get(row).getId();
@@ -1878,7 +1915,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
             //messageLabel.setText("Removed successfully!!");
             refreshTabel();
 
-        } catch (SQLException ex)
+        } catch (SQLException | ClassNotFoundException ex)
         {
 //            Warning wn = new Warning(ex.toString(), "Cannot get your sql connected.");
             Warning.createWarningDialog(ex);
@@ -1925,13 +1962,13 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         {
             musics[i] = new MyMusic(files[i].getName(), files[i].getAbsolutePath(), MyMusic.TYPE_LOCAL, Randomizer.randomInt(1000, 9999));
         }
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             database.addIntoMusicListInBatch(musics);
             System.out.println("journeylove.BackgroundMusic.addInBatch()ye ye ye ye ye");
             refreshTabel();
             messageLabel.setText("A bunch of musics have been added into your list.");
-        } catch (SQLException | UnsupportedAudioFileException | JavaLayerException | LineUnavailableException | IOException ex)
+        } catch (SQLException | UnsupportedAudioFileException | JavaLayerException | LineUnavailableException | IOException | ClassNotFoundException ex)
         {
             //Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
 //            new Warning("Cannot add music since  " + ex.toString());
@@ -2307,7 +2344,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
     public void swap(int id1, int id2)
     {
 
-        try
+        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             database.swapMusicList(id1, id2);
             messageLabel.setText("Swamped!");
@@ -2319,6 +2356,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         } catch (Exception e)
         {
             messageLabel.setText("Failed to swamp.");
+            Warning.createWarningDialog(e);
         }
     }
 

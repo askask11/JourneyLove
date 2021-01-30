@@ -47,7 +47,7 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import static journeylove.ImageList.TABLE_HEADERS_STRINGS;
-import static journeylove.ImageList.SGC;
+//import static journeylove.ImageList.SGC;
 import static journeylove.ImageList.IM;
 
 /**
@@ -55,11 +55,11 @@ import static journeylove.ImageList.IM;
  *
  * @author Johnson Gao
  */
-public class CreatePlaylist extends JFrame implements ActionListener,DocumentListener
+public final class CreatePlaylist extends JFrame implements ActionListener, DocumentListener
 {
 
     private static final long serialVersionUID = 1L;
-final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
+    final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
     //Final:font
     /**
      * A constant decleared for the font on the top.
@@ -115,7 +115,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
         this.getContentPane().setBackground(Color.PINK);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.setLayout(new BorderLayout());
-       // this.imageList = imageList;
+        // this.imageList = imageList;
         newDisplayImagesList = new ArrayList<>();
 
         /**
@@ -188,10 +188,10 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
         operationGroup.add(updateRadioButton);
         operationGroup.add(swapRadioButton);
         //</editor-fold>
-        
+
         /*
         JPopupMenu
-        */
+         */
         manageItem = new JMenuItem("Manage Your Lists");
         manageItem.addActionListener(this);
         listMenu = new JPopupMenu();
@@ -227,15 +227,18 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
             typeComboBox = new JComboBox<>(ImageList.TYPE_STRING);
             typeComboBox.setBorder(BorderFactory.createTitledBorder("Type: "));
             typeComboBox.setOpaque(false);
-            typeComboBox.addActionListener((ActionEvent e) ->{clickSound(SoundOracle.WATER_PRESS_4); });
+            typeComboBox.addActionListener((ActionEvent e) ->
+            {
+                clickSound(SoundOracle.WATER_PRESS_4);
+            });
             typeComboBox.addItemListener((ItemEvent e) ->
             {
                 chooseFileButton.setVisible(typeComboBox.getSelectedIndex() + 2 == DisplayImage.TYPE_LOCAL);
             });
-        } catch (SQLException ex)
+        } catch (SQLException | ClassNotFoundException ex)
         {
             Logger.getLogger(CreatePlaylist.class.getName()).log(Level.SEVERE, null, ex);
-            Warning warning = new Warning("Cannot connect to db!","",ex);
+            Warning warning = new Warning("Cannot connect to db!", "", ex);
         }
 
         /*
@@ -250,7 +253,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
             {
                 clickSound(SoundOracle.TINY_BUTTON_SOUND);
             }
-});
+        });
         toTable = new JTable(transferToTable(newDisplayImagesList), TABLE_HEADERS_STRINGS);
         toTable.getTableHeader().setBackground(LovelyColors.MOMO_PINK);
         toTable.addKeyListener(new KeyAdapter()
@@ -275,7 +278,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
             {
                 clickSound(SoundOracle.TINY_BUTTON_SOUND);
             }
-});
+        });
 
         /*
         JScrollPane
@@ -382,26 +385,27 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 
     /**
      * Get the imagelist of the current selected list.
+     *
      * @return The arraylist of selected list.
      */
     public ArrayList<DisplayImage> getImages()
     {
         int index = fromListComboBox.getSelectedIndex();
-        try
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             if (index == 0)
             {
-                this.imageArrayList = ImageList.SGC.getDisplayImage();
+                this.imageArrayList = database.getDisplayImage();
             } else
             {
-                this.imageArrayList = ImageList.SGC.getDisplayImage(SecretGardenConnection.IMAGES_SUBLIST_PREFIX + fromListComboBox.getItemAt(index));
+                this.imageArrayList = database.getDisplayImage(SecretGardenConnection.IMAGES_SUBLIST_PREFIX + fromListComboBox.getItemAt(index));
             }
 
-        } catch (Exception e)
+        } catch (SQLException | ClassNotFoundException e)
         {
-            Warning warning = new Warning(e.toString(),"",e);
+            Warning warning = new Warning(e.toString(), "", e);
             System.out.println("journeylove.ImageList.getImages()");
-            
+
         }
         return imageArrayList;
     }
@@ -430,22 +434,28 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
             update();
         }
     }
-    
+
     /**
      * Load the list.
-     * @throws SQLException 
+     *
+     * @throws SQLException
+     * @throws java.lang.ClassNotFoundException
      */
-    public void loadLists() throws SQLException
+    public final void loadLists() throws SQLException, ClassNotFoundException
     {
-            fromListComboBox = new JComboBox<>(SGC.getImageSublists());
-            // fromListComboBox.setBorder(BorderFactory.createTitledBorder("From: "));
-            fromListComboBox.setOpaque(false);
-            fromListComboBox.addItemListener((ItemEvent e) ->
-            {
-                refreshTable(getImages(), fromTable);
-            });
-            fromListComboBox.addActionListener((ActionEvent e) ->{clickSound(SoundOracle.WATER_PRESS_4); });
-            fromListComboBox.setComponentPopupMenu(listMenu);
+        SecretGardenConnection SGC = SecretGardenConnection.getDefaultInstance();
+        fromListComboBox = new JComboBox<>(SGC.getImageSublists());
+        // fromListComboBox.setBorder(BorderFactory.createTitledBorder("From: "));
+        fromListComboBox.setOpaque(false);
+        fromListComboBox.addItemListener((ItemEvent e) ->
+        {
+            refreshTable(getImages(), fromTable);
+        });
+        fromListComboBox.addActionListener((ActionEvent e) ->
+        {
+            clickSound(SoundOracle.WATER_PRESS_4);
+        });
+        fromListComboBox.setComponentPopupMenu(listMenu);
     }
 
     /**
@@ -551,38 +561,38 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
         int type = typeComboBox.getSelectedIndex() + 2;
         int index = toTable.getSelectedRow();
 
-        
-            if(name.isEmpty())
-            {
-                name=newDisplayImagesList.get(index).getName();
-            }
-            if(url.isEmpty())
-            {
-                url=newDisplayImagesList.get(index).getUrlAsString();
-            }
-            if(description.isEmpty())
-            {
-                description = newDisplayImagesList.get(index).getDescription();
-            }
+        if (name.isEmpty())
+        {
+            name = newDisplayImagesList.get(index).getName();
+        }
+        if (url.isEmpty())
+        {
+            url = newDisplayImagesList.get(index).getUrlAsString();
+        }
+        if (description.isEmpty())
+        {
+            description = newDisplayImagesList.get(index).getDescription();
+        }
 
-            DisplayImage displayImage = new DisplayImage(name, url, type, Randomizer.randomInt(1000, 9999), description);
+        DisplayImage displayImage = new DisplayImage(name, url, type, Randomizer.randomInt(1000, 9999), description);
 
-            if (index != -1)
-            {
-                newDisplayImagesList.remove(index);
-                newDisplayImagesList.add(index, displayImage);
-                refreshTable(newDisplayImagesList, toTable);
-                clickSound(SoundOracle.UI_DINGDONG);
-                clearAllFields();
-            } else
-            {
-                messageLabel.setText("Please select a row from the table underneath.");
-            }
-        
+        if (index != -1)
+        {
+            newDisplayImagesList.remove(index);
+            newDisplayImagesList.add(index, displayImage);
+            refreshTable(newDisplayImagesList, toTable);
+            clickSound(SoundOracle.UI_DINGDONG);
+            clearAllFields();
+        } else
+        {
+            messageLabel.setText("Please select a row from the table underneath.");
+        }
+
     }
 
     /**
      * Switch the position of two members in the new list.
+     *
      * @param index1 Member 1.
      * @param index2 Member 2.
      */
@@ -650,6 +660,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 
     /**
      * This refresh the table.
+     *
      * @param displayImages The data need to be put in the table.
      * @param oldTable The previous table needs to be refreshed.
      */
@@ -662,7 +673,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
     /**
      * Refresh the buttom control panel.
      */
-    public void envalidateOperation()
+    final public void envalidateOperation()
     {
         boolean addUpdateGroup = addRadioButton.isSelected() || updateRadioButton.isSelected();
         urlBox.setVisible(addUpdateGroup);
@@ -674,7 +685,8 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 
     /**
      * Invoked when an action is performed.
-     * @param e 
+     *
+     * @param e
      */
     @Override
     public void actionPerformed(ActionEvent e)
@@ -735,50 +747,53 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 
             }
             clickSound(SoundOracle.BUTTON_CLICKED_SOUND);
-        } else if(source.equals(chooseFileButton))
+        } else if (source.equals(chooseFileButton))
         {
             clickSound(SoundOracle.BUTTON_CLICKED_SOUND);
             JFileChooser chooser = new JFileChooser("C:\\Users\\app\\Pictures\\");
             int confirmed = chooser.showOpenDialog(this);
-            if(confirmed == JFileChooser.APPROVE_OPTION)
+            if (confirmed == JFileChooser.APPROVE_OPTION)
             {
                 urlField.setText(chooser.getSelectedFile().getAbsolutePath());
             }
-        }else if(source.equals(saveButton))
+        } else if (source.equals(saveButton))
         {
             save();
             clickSound(SoundOracle.BUTTON_CLICKED_SOUND);
-        }else if(source.equals(manageItem))
+        } else if (source.equals(manageItem))
         {
             clickSound(SoundOracle.DOOR_UNLOCKED_SOUND);
             ManagePlaylist managePlaylist = new ManagePlaylist();
         }
 
     }
+
     /**
-     * Invoke when user press "save" button. An confirm dialog will pop up
-     * and show confirmation message.
+     * Invoke when user press "save" button. An confirm dialog will pop up and
+     * show confirmation message.
+     *
      * @see saveList()
      */
     public void save()
     {
         int confirmed = JOptionPane.showConfirmDialog(null, "Are you sure you want to save?", "Save Confirmation", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if(confirmed == JOptionPane.YES_OPTION)
+        if (confirmed == JOptionPane.YES_OPTION)
         {
             saveList();
         }
     }
+
     /**
-     * Create a new list and insert all data in table underneeth into the new list.
-     * Data are got from user entered.
+     * Create a new list and insert all data in table underneeth into the new
+     * list. Data are got from user entered.
      */
     public void saveList()
     {
         String name = listNameField.getText().replace(" ", "_");
-        try
+        try (SecretGardenConnection SGC = SecretGardenConnection.getDefaultInstance())
         {
             SGC.createImageSublist(name);
-            
+
             for (DisplayImage newDisplayImagesList1 : newDisplayImagesList)
             {
                 SGC.insertIntoImageSublist(newDisplayImagesList1, name);
@@ -789,11 +804,11 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
             refreshTable(newDisplayImagesList, toTable);
             listNameField.setText("");
             refreshComboBox();
-           // loadLists();
-        } catch (SQLException ex)
+            // loadLists();
+        } catch (SQLException | ClassNotFoundException ex)
         {
 //            Logger.getLogger(CreatePlaylist.class.getName()).log(Level.SEVERE, "cannot save list", ex);
-            Warning warning = new Warning("Failed to save your sublist because of " +ex.getMessage() +Warning.SQL_EXCEPTION_DESCTIPTION, "Resave" + Warning.SQL_EXCEPTION_SUGGESTION,ex);
+            Warning warning = new Warning("Failed to save your sublist because of " + ex.getMessage() + Warning.SQL_EXCEPTION_DESCTIPTION, "Resave" + Warning.SQL_EXCEPTION_SUGGESTION, ex);
 //            try
 //            {
 //                //SGC.dropImageSublist(name);
@@ -805,12 +820,12 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 //                www.setSuggestion("Please check for illegal characters or spaces ,existing name, and try again!");
 //            }
         }
-        
-        
+
     }
 
     /**
      * Test main method.
+     *
      * @param args Lines command argument.
      */
     public static void main(String[] args)
@@ -820,7 +835,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 //           System.out.println("Arg "+ i + " is: "+ args[i]);
 //       }
 
-       // System.out.println(Arrays.toString(args);
+        // System.out.println(Arrays.toString(args);
         ImageList list = new ImageList();
         list.setDefaultCloseOperation(EXIT_ON_CLOSE);
         list.setVisible(true);
@@ -828,17 +843,22 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
         standardFrame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
     }
+
     /**
      * Reload the table selection combo box with new data from database.
+     *
      * @throws SQLException Failed to connect database or cannot get data.
+     * @throws java.lang.ClassNotFoundException
      */
-    public void refreshComboBox() throws SQLException
+    public void refreshComboBox() throws SQLException, ClassNotFoundException
     {
-        typeComboBox.setModel(new DefaultComboBoxModel<>(SGC.getImageSublists()));
+        SecretGardenConnection db = SecretGardenConnection.getDefaultInstance();
+        typeComboBox.setModel(new DefaultComboBoxModel<>(db.getImageSublists()));
     }
 
     /**
      * Produce a little click sound.
+     *
      * @param soundName The soundname.
      * @see SoundOracle
      */
@@ -853,20 +873,20 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
             effectClip.addLineListener((LineEvent e) ->
             {
                 LineEvent.Type type = e.getType();
-                if(type.equals(LineEvent.Type.STOP))
+                if (type.equals(LineEvent.Type.STOP))
                 {
                     effectClip.close();
                 }
             });
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ex)
         {
-            Warning warning = new Warning("Cannot open sound  " , ex.toString(),ex);
+            Warning warning = new Warning("Cannot open sound  ", ex.toString(), ex);
         }
     }
 
     /**
-     * Gives notification that there was an insert into the document.  The
-     * range given by the DocumentEvent bounds the freshly inserted region.
+     * Gives notification that there was an insert into the document. The range
+     * given by the DocumentEvent bounds the freshly inserted region.
      *
      * @param e the document event
      */
@@ -894,12 +914,13 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
 //                Logger.getLogger(CreatePlaylist.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 //        }
-        
+
     }
-/**
-     * Gives notification that a portion of the document has been
-     * removed.  The range is given in terms of what the view last
-     * saw (that is, before updating sticky positions).
+
+    /**
+     * Gives notification that a portion of the document has been removed. The
+     * range is given in terms of what the view last saw (that is, before
+     * updating sticky positions).
      *
      * @param e the document event
      */
@@ -908,6 +929,7 @@ final Font MESSAGE_FONT = new Font("Courier New", Font.PLAIN, 20);
     {
         clickSound(SoundOracle.PHONE_TYPING_SOUND);
     }
+
     /**
      * Gives notification that an attribute or set of attributes changed.
      *
