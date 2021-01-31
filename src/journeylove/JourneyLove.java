@@ -1144,34 +1144,28 @@ public class JourneyLove extends JFrame implements ActionListener, MouseListener
     {
         try
         {
-            URL url = new URL("https://captive.apple.com");
+            URL url = new URL("http://example.com");
             URLConnection conn = url.openConnection();
+            //conn.addRequestProperty("User-Agent", "Mozilla/5.0");
             //conn.addRequestProperty("cookie", "me=3266933");
             InputStream s = conn.getInputStream();
-            StringBuilder textBuilder = new StringBuilder();
-            try (Reader reader = new BufferedReader(new InputStreamReader(s, Charset.forName(StandardCharsets.UTF_8.name()))))
-            {
-                int c = 0;
-                while ((c = reader.read()) != -1)
-                {
-                    textBuilder.append((char) c);
-                }
-            }
-            String result = new String(textBuilder);
-
-            if (result.equals("Success"))
-            {
-                return true;
-            } else
-            {
-                System.out.println(result);
-                return false;
-            }
-
+//            StringBuilder textBuilder = new StringBuilder();
+//            try (Reader reader = new BufferedReader(new InputStreamReader(s, Charset.forName(StandardCharsets.UTF_8.name()))))
+//            {
+//                int c = 0;
+//                while ((c = reader.read()) != -1)
+//                {
+//                    textBuilder.append((char) c);
+//                }
+//            }
+//            String result = new String(textBuilder);
+//
+//            return !result.isEmpty();
+            return true;
         } catch (IOException ex)
         {
-            //Logger.getLogger(JourneyLove.class.getName()).log(Level.SEVERE, null, ex);
-            ex.printStackTrace();
+            Logger.getLogger(JourneyLove.class.getName()).log(Level.SEVERE, null, ex);
+            //ex.printStackTrace();
             return false;
         }
     }
