@@ -8,6 +8,7 @@ I LOOOOOVE YOU JENNY!!!!!!!!!!
  */
 package journeylove;
 
+import cn.hutool.setting.Setting;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,9 +49,9 @@ import javazoom.jl.decoder.JavaLayerException;
  */
 public class SecretGardenConnection implements AutoCloseable
 {
-
+    static final Setting SETTING = new Setting("db.setting");
     Connection dbConn = null;
-    String dbName = "SecretGarden";
+    String dbName = SETTING.get("dbName");
     public final static String[] COLLECTORHEADER =
     {
         "Name", "Columns_Detail", "Descriptions"
@@ -72,10 +73,12 @@ public class SecretGardenConnection implements AutoCloseable
     static final String IMAGETABLES_COLUMNS = "Name varchar(90), UrlAddress varchar(400), type int, ID int ,Description varchar(600)";
 //Collctors already created, code not yet updated
 
-    final String PREF_KEY_SAVINGPATH = "Default Saving Path";
+    static final String PREF_KEY_SAVINGPATH = "Default Saving Path";
 
-    final String PERF_KEY_MAILBOX = "MailBoxAddress";
-    final String PERF_KEY_MUSIC_PLAYMODE = "MusicPlayMode";
+    static final String PERF_KEY_MAILBOX = "MailBoxAddress";
+    static final String PERF_KEY_MUSIC_PLAYMODE = "MusicPlayMode";
+
+            
 
     /**
      * This returns an arraylist contains the data from the table.
@@ -1518,7 +1521,7 @@ public class SecretGardenConnection implements AutoCloseable
     {
 
         //NO this.dbConn = dbConn;
-        String connectionURL = "jdbc:mysql://db.jianqinggao.com:3306/" + this.dbName;
+        String connectionURL = "jdbc:mysql://"+SETTING.get("host")+"/" + this.dbName;
         this.dbConn = null;
         //Find the driver and make connection;
 
@@ -1532,8 +1535,8 @@ public class SecretGardenConnection implements AutoCloseable
 //            this.dbConn = DriverManager.getConnection(connectionURL);
             Class.forName("com.mysql.cj.jdbc.Driver"); //URL for new version jdbc connector.
             Properties properties = new Properties(); //connection system property
-            properties.setProperty("user", "Jenny");
-            properties.setProperty("password", "3266933");
+            properties.setProperty("user", SETTING.get("user"));
+            properties.setProperty("password", SETTING.get("pass"));
             properties.setProperty("useSSL", "true");//set this true if domain suppotes SSL
             //"-u root -p mysql1 -useSSL false"
             this.dbConn = DriverManager.getConnection(connectionURL, properties);

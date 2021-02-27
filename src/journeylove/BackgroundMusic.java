@@ -5,6 +5,8 @@
 package journeylove;
 
 //Hot key registered F7,F8,F9
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import com.melloware.jintellitype.HotkeyListener;
 import com.melloware.jintellitype.JIntellitype;
 
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -291,13 +292,6 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         this.getContentPane().setBackground(LovelyColors.TRUE_BLUSH);
         this.setDefaultCloseOperation(HIDE_ON_CLOSE);
         this.setLayout(new BorderLayout());
-        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
-        {
-            rotatingMethod = database.getInfoFromPerferList(database.PERF_KEY_MUSIC_PLAYMODE);
-        } catch (SQLException | ClassNotFoundException ex)
-        {
-            Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
         //JLabel
         titleLabel = new JLabel("Journey's Music Player", IMANAGER.openIcon("playmusic.png"), SwingConstants.CENTER);
@@ -318,8 +312,19 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         timeLabel = new JLabel("0:0");
         timeLabel.setFont(MESSAGE_FONT);
         timeLabel.setToolTipText("You can adjust your time position using the position scroll bar");
-        rotateMethodLabel = new JLabel(IMANAGER.openIcon(SEQUENCE_ROTATE_ICON_DARKBLUE));
-        rotateMethodLabel.setToolTipText(SEQUENCE_ROTATE_TOOLTIP);
+        try (Preference p = Preference.getInstance())
+        {
+            rotatingMethod = p.getRotateMethod();
+        } catch (IOException e)
+        {
+            rotatingMethod = SEQUENCE_ROTATE;
+            Warning.createWarningDialog(e);
+            e.printStackTrace();
+        }
+        
+        rotateMethodLabel = new JLabel();
+        //rotateMethodLabel.setToolTipText(SEQUENCE_ROTATE_TOOLTIP);
+        loadRotateMethod();
         rotateMethodLabel.addMouseListener(new MouseAdapter()//Add a mouth listener
         {
             /**
@@ -342,11 +347,11 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                         break;
                     default:
                     {//In case of non-sence, use default value "sequence";
-                        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+                        try (Preference p = Preference.getInstance())
                         {
                             //Replace the unknown value to sequence rotate..
-                            database.updatePreferenceList(database.PERF_KEY_MUSIC_PLAYMODE, SEQUENCE_ROTATE);
-                        } catch (SQLException | ClassNotFoundException ex)
+                            p.setRotateMethod(SEQUENCE_ROTATE);
+                        } catch (IOException ex)
                         {
                             Warning.createWarningDialog(ex);
                             Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
@@ -391,22 +396,13 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                 switch (rotatingMethod)
                 {
                     case SEQUENCE_ROTATE:
-                        rotatingMethod = RANDOM_ROTATE;
-                        restoreMusicPlayMode(rotatingMethod);
-                        rotateMethodLabel.setIcon(IMANAGER.openIcon(RANDOM_ROTATE_ICON_BLUE));
-                        rotateMethodLabel.setToolTipText(RANDOM_ROTATE_TOOLTIP);
+                        updateMusicRotateMethod(RANDOM_ROTATE);
                         break;
                     case RANDOM_ROTATE:
-                        rotatingMethod = SINGLE_ROTATE;
-                        restoreMusicPlayMode(rotatingMethod);
-                        rotateMethodLabel.setIcon(IMANAGER.openIcon(SINGLE_ROTATE_ICON_BLUE));
-                        rotateMethodLabel.setToolTipText(SINGLE_ROTATE_TOOLTIP);
+                        updateMusicRotateMethod(SINGLE_ROTATE);
                         break;
                     case SINGLE_ROTATE:
-                        rotatingMethod = SEQUENCE_ROTATE;//set back to seq.
-                        restoreMusicPlayMode(rotatingMethod);
-                        rotateMethodLabel.setIcon(IMANAGER.openIcon(SEQUENCE_ROTATE_ICON_BLUE));
-                        rotateMethodLabel.setToolTipText(SEQUENCE_ROTATE_TOOLTIP);
+                        updateMusicRotateMethod(SEQUENCE_ROTATE);
                         break;
                     default:
                         System.out.println(".mouseReleased()");
@@ -552,7 +548,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         //table
         try
         {
-            musicTable = new JTable(toObjectses(getMyMusics()), MUSIC_TABLEHEADER);
+            musicTable = new JTable(new Object[1][MUSIC_TABLEHEADER.length], MUSIC_TABLEHEADER);
             musicTable.addMouseListener(new MouseAdapter()
             {
                 @Override
@@ -847,30 +843,6 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         chooser = new JFileChooser();
         chooser.setFileFilter(MUSIC_FILTER);
 
-        //Check default saving address status.
-        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
-        {
-            String defaultSaving = database.getDefaultSavingPath();
-            if (defaultSaving == null || defaultSaving.isEmpty())
-            {
-//                Warning warning = new Warning("You don't have a default saving address yet!", "Please set a default saving address");
-//                warning.setSolution(() ->
-//                {
-//                    JOptionPane.showMessageDialog(this, "Please set your default saving address in the file chooder poped up.");
-//                });
-//                setDefaultSavingAddress();
-                int conf = JOptionPane.showConfirmDialog(this, "You don't have a default saving address yet. Do you want to set a default saving address?", "No Saving Address", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-                if (conf == JOptionPane.YES_OPTION)
-                {
-                    setDefaultSavingAddress();
-                }
-            }
-        } catch (SQLException|ClassNotFoundException ex)
-        {
-            Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, null, ex);
-            Warning.createWarningDialog(ex);
-        }
-
         //Add listenerL listen to the keyboard.
         this.getContentPane().addKeyListener(new KeyAdapter()
         {
@@ -945,6 +917,30 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
             System.out.println("Failed to register hot key.");
         }
 
+        refreshTabel();
+
+    }
+
+    public void loadRotateMethod()
+    {
+        switch (rotatingMethod)
+        {
+            case RANDOM_ROTATE:
+                rotateMethodLabel.setIcon(IMANAGER.openIcon(RANDOM_ROTATE_ICON_DARKBLUE));
+                rotateMethodLabel.setToolTipText(RANDOM_ROTATE_TOOLTIP);
+                break;
+            case SINGLE_ROTATE:
+                rotateMethodLabel.setIcon(IMANAGER.openIcon(SINGLE_ROTATE_ICON_DARKBLUE));
+                rotateMethodLabel.setToolTipText(SINGLE_ROTATE_TOOLTIP);
+                break;
+            case SEQUENCE_ROTATE:
+            default:
+                rotateMethodLabel.setIcon(IMANAGER.openIcon(SEQUENCE_ROTATE_ICON_DARKBLUE));
+                rotateMethodLabel.setToolTipText(SEQUENCE_ROTATE_TOOLTIP);
+                break;
+
+        }
+        
     }
 
     /**
@@ -977,12 +973,13 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         //bgm.setVisible(true);
     }
 
-    public void restoreMusicPlayMode(String mode)
+    public void updateMusicRotateMethod(String mode)
     {
-        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        rotatingMethod = mode;
+        try (Preference p = Preference.getInstance())
         {
-            database.updatePreferenceList(database.PERF_KEY_MUSIC_PLAYMODE, mode);
-        } catch (SQLException | ClassNotFoundException ex)
+            p.setRotateMethod(mode);
+        } catch (IOException ex)
         {
 //            Warning warning = new Warning(ex.toString());
 //            warning.getContentPane().setBackground(Color.white);
@@ -1289,18 +1286,18 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         } else if (source.equals(saveCheckBox))
         {
             clickSound(SoundOracle.TINY_BUTTON_SOUND);
-            try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+            try (Preference p = Preference.getInstance();)
             {
-                String dfp = database.getDefaultSavingPath();
-                if (dfp == null || dfp.isEmpty())
+                String dfp = p.getSavingPath();
+                if (StrUtil.isBlank(dfp))
                 {
-                    messageLabel.setText("You don't have your default address!! Please  set it up.");
+                    messageLabel.setText("You don't have your default address!! Please set it up.");
                     setDefaultSavingAddress();
                 }
-            } catch (SQLException | ClassNotFoundException ex)
+            } catch (IOException ex)
             {
                 Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, "Cannot contact your database.", ex);
-                messageLabel.setText("Cannot contact your database.");
+                messageLabel.setText("Cannot read file.");
                 Warning.createWarningDialog(ex);
             }
         } else if (source.equals(defaultSaveItem))
@@ -1514,17 +1511,17 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
      */
     public void setDefaultSavingAddress()
     {
-        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        try (Preference p = Preference.getInstance())
         {
-            JFileChooser saver = new JFileChooser(database.getDefaultSavingPath());
+            JFileChooser saver = new JFileChooser(p.getSavingPath());
             saver.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int confirmed = saver.showSaveDialog(null);
             if (confirmed == JFileChooser.APPROVE_OPTION)
             {
-                database.updateDefaultSavingPath(saver.getSelectedFile().getAbsolutePath());
+                p.setSavingPath(saver.getSelectedFile().getAbsolutePath());
                 messageLabel.setText("Your default saving address has been updated!");
             }
-        } catch (SQLException | ClassNotFoundException ex)
+        } catch (IOException ex)
         {
             Warning.createWarningDialog(ex);
             Logger.getLogger(BackgroundMusic.class.getName()).log(Level.SEVERE, "Cannot contact your database.", ex);
@@ -1700,14 +1697,14 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         MyMusic music = new MyMusic(name, url, MyMusic.TYPE_ONLINE);
         String path;
         boolean hasSavingAddress = true;
-        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        try (Preference p = Preference.getInstance())
         {
-            path = database.getDefaultSavingPath();
-            if (path == null || path.isEmpty())
+            path = p.getSavingPath();
+            if (StrUtil.isBlank(path))
             {
                 hasSavingAddress = false;
             }
-        } catch (SQLException | ClassNotFoundException e)
+        } catch (IOException e)
         {
             Warning.createWarningDialog(e);
             path = "./";
@@ -1764,11 +1761,11 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         String path = "./";
         boolean hasSavingAddress = true;
         //get the default saving path
-        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        try (Preference p = Preference.getInstance())
         {
-            path = database.getDefaultSavingPath();
-            hasSavingAddress = (path != null && !path.isEmpty());
-        } catch (SQLException | ClassNotFoundException e)
+            path = p.getSavingPath();
+            hasSavingAddress = StrUtil.isNotBlank(path);
+        } catch (IOException e)
         {
             Warning.createWarningDialog(e);
             hasSavingAddress = false;
@@ -2047,6 +2044,11 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
         return musicTable;
     }
 
+    public ArrayList<MyMusic> getMusicList()
+    {
+        return musicList;
+    }
+
     /**
      * Set the table.
      *
@@ -2126,7 +2128,17 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                     {
                         try
                         {
-                            lyricReader = new LyricReader(new File(lyricAddress));
+                            //read the lyric file
+                            if (StrUtil.startWithAny(lyricAddress, "https://", "http://"))
+                            {
+                                File tempLrcFile = File.createTempFile("templrc", ".lrc");
+                                HttpUtil.downloadFile(lyricAddress, tempLrcFile);
+                                lyricReader = new LyricReader(tempLrcFile);
+                            } else
+                            {
+                                lyricReader = new LyricReader(new File(lyricAddress));
+                            }
+
                             isLyricFound = true;
                             refreshLyricLines();
                             lyricWindow.getNameField().setText(lyricReader.getLyricTitle());
@@ -2169,9 +2181,6 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
                     lyricWindow.setPreviousLine("Journey's music player, play my style!");
                     isLyricFound = false;
                     lyricWindow.ClearAllFields();
-
-//                 lyricWindow.getName()
-//                         .sett
                 }
 
             }
@@ -2344,7 +2353,7 @@ public class BackgroundMusic extends JFrame implements ActionListener, LineListe
     public void swap(int id1, int id2)
     {
 
-        try(SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
+        try (SecretGardenConnection database = SecretGardenConnection.getDefaultInstance())
         {
             database.swapMusicList(id1, id2);
             messageLabel.setText("Swamped!");

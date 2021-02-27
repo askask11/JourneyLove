@@ -476,22 +476,7 @@ public class LyricWindow extends JFrame implements ActionListener, ItemListener
         this.setVisible(true);
     }
 
-    /**
-     * Edit the offset, which located in the <code>lyricReader</code> of the
-     * main music player.
-     */
-//    public void applyOffset()
-//    {
-//        try
-//        {
-//            int offset = Integer.parseInt(offsetField.getText());
-//            backgroundMusic.getLyricReader().setOffset(offset);
-//            JOptionPane.showMessageDialog(this, "Your offset has beed reset to " + offset, "Reset successfully", JOptionPane.INFORMATION_MESSAGE,IM.openIcon("3tangyuans.jpg",200,150));
-//        } catch (Exception e)
-//        {
-//            JOptionPane.showMessageDialog(this, " <br> Detail: " + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
-//        }
-////    }
+   
     @Override
     public void actionPerformed(ActionEvent e)
     {

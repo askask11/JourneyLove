@@ -7,6 +7,7 @@ package journeylove;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagLayout;
@@ -32,6 +33,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -233,9 +235,8 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
             importFileButton.setVisible(index == 0);
             clickSound(SoundOracle.WATER_PRESS_3);
         });
-        try(SecretGardenConnection SGC = SecretGardenConnection.getDefaultInstance())
-        {
-            listComboBox = new JComboBox<>(SGC.getImageSublists());
+        
+            listComboBox = new JComboBox<>(new String[]{"Main ImageList"});
             //listComboBox.setBorder(BorderFactory.createTitledBorder("Choose Your List:"));
             listComboBox.setOpaque(false);
             listComboBox.setToolTipText("<html>Select your playlist."
@@ -246,11 +247,7 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
                 refreshTable();
                 clickSound(SoundOracle.WATER_PRESS_3);
             });
-        } catch (SQLException|ClassNotFoundException ex)
-        {
-            Logger.getLogger(ImageList.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(1);
-        }
+        
 
         //JTable
         imageTable = new JTable(transferToTable(), TABLE_HEADERS_STRINGS);
@@ -360,7 +357,16 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
         chooser = new JFileChooser();
         envalidateOperation();
         //singlUseEntry();
+        EventQueue.invokeLater(()->{
+            try(SecretGardenConnection SGC = SecretGardenConnection.getDefaultInstance())
+            {
+                listComboBox.setModel(new DefaultComboBoxModel<>(SGC.getImageSublists()));
+            } catch (Exception e)
+            {
+                Warning.createWarningDialog(e);
+            }
         
+        });
     }
 
     /**
@@ -396,7 +402,8 @@ public class ImageList extends JFrame implements ActionListener, DocumentListene
      */
     public Object[][] transferToTable()
     {
-        Object[][] tableData = new Object[getImages().size()][TABLE_HEADERS_STRINGS.length];
+        getImages();
+        Object[][] tableData = new Object[imageList.size()][TABLE_HEADERS_STRINGS.length];
         for (int i = 0; i < imageList.size(); i++)
         {
             tableData[i][0] = i + 1;

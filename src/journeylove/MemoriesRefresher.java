@@ -642,7 +642,7 @@ public class MemoriesRefresher extends JFrame implements ActionListener
     {
         try
         {
-            if (bgm.getMyMusics().isEmpty())
+            if (bgm.getMusicList().isEmpty())
             {
                 feedbackLabel.setText("You don't have any music yet!!!");
             } else
